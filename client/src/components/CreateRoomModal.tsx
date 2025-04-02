@@ -1,7 +1,8 @@
 import { createPortal } from "react-dom";
-import { IoClose } from "react-icons/io5";
+import { IoMdClose } from "react-icons/io";
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
-import { IoCopy } from "react-icons/io5";
+import { FaCopy } from "react-icons/fa";
+import { FaCog } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
 import { Player } from "../types/types.ts";
@@ -19,7 +20,6 @@ const CreateRoomModal = ({
   onClose: () => void;
   socket: Socket;
 }) => {
-  const NoOfTeams = [2, 3] as const;
   const [copyLink, setCopyLink] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [duration, setDuration] = useState<number>(0);
@@ -41,7 +41,6 @@ const CreateRoomModal = ({
         console.log("hello");
       }
     );
-    console.log("lol");
     socket.on("userError", (error) => alert(error));
 
     return () => {
@@ -75,7 +74,7 @@ const CreateRoomModal = ({
   }
   return createPortal(
     <div
-      className={`z-50 fixed left-0 right-0 bottom-0 top-0 bg-blue-900/50 flex transition-all ease-out
+      className={`z-50 fixed left-0 right-0 bottom-0 top-0 bg-blue-900/50 flex items-center justify-center
                     ${
                       createRoom
                         ? "opacity-100 visible"
@@ -84,70 +83,53 @@ const CreateRoomModal = ({
     >
       {/* Content */}
 
-      <div className="relative h-[95%] w-[80%] m-auto rounded-md p-3 bg-gradient-to-br from-blue-950 to-blue-800 text-blue-50">
-        <IoClose
-          className="absolute right-2 text-lg cursor-pointer stroke-3 text-gray-200 "
-          onClick={onClose}
-        />
-
-        {/* Text */}
-
-        <div className="w-full h-full overflow-auto">
-          {/* Host */}
-          <p className="text-md font-medium mt-1.5 w-fit shadow-sm shadow-gray-100/50 text-blue-50 p-0.75 px-1 rounded-md">
-            HOST - {nickname}
-          </p>
-
-          {/* Invite  */}
-          <div className="mt-4">
-            <p className="font-medium text-xl mb-1">
-              Invite others using the following link:
-            </p>
-
-            {/* Invite link content */}
-            <div className="flex gap-4 relative">
-              <div
-                className={`outline-none w-[80%] bg-blue-50/20 rounded-md text-orange-500 p-1 px-2.5 font-bold tracking-wide `}
-              >
+      <div className="h-[95%] w-[80%] rounded p-5 bg-gradient-to-b from-blue-950 to-blue-900 flex flex-col">
+        <div className="flex items-stretch justify-between">
+          <p className="text-2xl text-white font-medium">{`Room Hosted By ${nickname}`}</p>
+          <button
+            className="text-white text-sm border-white border px-3 rounded cursor-pointer flex items-center"
+            onClick={onClose}
+          >
+            Close Room <IoMdClose className="ml-1 relative top-[0.05em]" />
+          </button>
+        </div>
+        <div>
+          <div className="mt-4 border-t border-t-white flex items-center justify-between">
+            <div>
+              <p className="font-medium text-lg mt-4 text-white">
+                Invite others using the following link :
+              </p>
+              <p className="text-white text-sm tracking-wide mt-2">
                 {inviteLink}
-              </div>
-
-              <button
-                className={`border-none outline-none px-2 py-1 bg-gradient-to-br from-green-800 to-green-600
-                           text-white font-medium rounded-md cursor-pointer
-                             hover:bg-gradient-to-br hover:from-green-600 hover:to-green-500 
-                             flex gap-1 items-center`}
-                onClick={copyLinkToClipboard}
-              >
-                <IoCopy />
-                Copy
-              </button>
-
-              {/* Feedback Message */}
-              {copyLink && (
-                <div className=" absolute right-0.5 top-2 text-green-500 font-medium text-xs">
-                  Copied to Clipboard
-                </div>
-              )}
+              </p>
             </div>
+            <button
+              className="text-white text-sm border-white border px-3 rounded cursor-pointer flex items-center py-2"
+              onClick={copyLinkToClipboard}
+            >
+              {copyLink ? "Link Copied" : "Copy Link"}
+              <FaCopy className="ml-2" />
+            </button>
           </div>
 
           {/* Lobby Settings */}
-          <div className="mt-8 ">
-            <p className="font-medium text-xl mb-1">Lobby Settings</p>
+          <div className="mt-8">
+            <div className="font-medium text-lg mt-4 text-white flex items-center">
+              Configure Game Settings <FaCog className="ml-2" />
+            </div>
 
             {/* Settings spec */}
 
-            <div className="flex justify-between items-center mb-4">
+            <div className=" mb-4">
               {/* 1. Player's turn duration */}
-              <div className="w-full">
-                <p className="text-center mb-3 text-lg font-medium">
-                  Set turn duration
+              <div>
+                <p className="mt-3 font-medium text-white">Turn Duration</p>
+                <p className="font-medium text-white text-xs tracking-wide">
+                  Decide how much time each player has to make a move.
                 </p>
-                <div className="p-1 px-4 flex justify-around text-center mb-8">
+                <div className="mt-3 flex items-center gap-5">
                   <button
-                    className={`px-4 py-2 outline-none border  cursor-pointer font-medium rounded-md
-                              hover:bg-blue-50 hover:border-blue-50 hover:text-blue-950
+                    className={`px-4 py-2 outline-none border cursor-pointer font-medium rounded text-sm
                               ${
                                 duration === 120000
                                   ? "bg-white text-blue-950"
@@ -158,8 +140,7 @@ const CreateRoomModal = ({
                     2 minutes
                   </button>
                   <button
-                    className={`px-4 py-2 outline-none border  cursor-pointer font-medium rounded-md
-                              hover:bg-blue-50 hover:border-blue-50 hover:text-blue-950
+                    className={`px-4 py-2 outline-none border cursor-pointer font-medium rounded text-sm
                               ${
                                 duration === 300000
                                   ? "bg-white text-blue-950"
@@ -172,121 +153,129 @@ const CreateRoomModal = ({
                 </div>
               </div>
 
-              <div className="w-full">
-                <p className="text-center mb-3 text-lg font-medium">
-                  Set total teams
+              <div className="mt-5">
+                <p className="mt-3 font-medium text-white">Number Of Teams</p>
+                <p className="font-medium text-white text-xs tracking-wide">
+                  Decide how much teams should be available.
                 </p>
-                <div className="p-1 px-4 flex justify-around text-center mb-8">
-                  {NoOfTeams.map((x, i) => (
-                    <button
-                      key={i}
-                      className={`px-4 py-2 outline-none border border-white cursor-pointer font-medium rounded-md
-                    hover:bg-blue-50 hover:border-blue-50 hover:text-blue-950
+                <div className="mt-3 flex items-center gap-5">
+                  <button
+                    className={`px-4 py-2 outline-none border cursor-pointer font-medium rounded text-sm
                     ${
-                      totalTeams === x
+                      totalTeams === 2
                         ? "bg-white text-blue-950"
                         : "text-white "
                     }`}
-                      onClick={() => updateTotalTeams(x)}
-                    >
-                      {x}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 2.Customize team */}
-            <p className="text-center mb-3 text-lg font-medium">Team Setup</p>
-            {/* 2 teams customization */}
-            <div className="w-full flex px-4 gap-4">
-              {/* Team A */}
-              <div className="w-full flex flex-col items-center">
-                <button
-                  onClick={() => updatePlayerTeam("A")}
-                  className={`text-sm px-2 py-1 outline-none cursor-pointer font-medium rounded-md tracking-wide
-                            bg-gradient-to-br from-gray-600 to-gray-500 hover:bg-gradient-to-br
-                            hover:from-gray-500 hover:to-gray-400 w-fit mb-2`}
-                >
-                  SWITCH TO TEAM A
-                </button>
-                <div className="w-full h-40 p-3 rounded-md bg-slate-50/50 ">
-                  {players
-                    .filter((x) => x.team === "A")
-                    .map((x, i) => (
-                      <p
-                        key={i}
-                        className="m-2 inline-block bg-gradient-to-br from-blue-600 to-blue-500 p-2 py-0.5 rounded-md w-fit"
-                      >
-                        {x.name}
-                      </p>
-                    ))}
-                </div>
-              </div>
-
-              {/* Team B */}
-              <div className="w-full flex flex-col items-center">
-                <button
-                  onClick={() => updatePlayerTeam("B")}
-                  className={`text-sm px-2 py-1 outline-none cursor-pointer font-medium rounded-md tracking-wide
-                            bg-gradient-to-br from-gray-600 to-gray-500 hover:bg-gradient-to-br
-                            hover:from-gray-500 hover:to-gray-400 w-fit mb-2`}
-                >
-                  SWITCH TO TEAM B
-                </button>
-                <div className="w-full h-40 p-3 rounded-md bg-slate-50/50">
-                  {players
-                    .filter((x) => x.team === "B")
-                    .map((x, i) => (
-                      <p
-                        key={i}
-                        className="m-2 inline-block bg-gradient-to-br from-blue-600 to-blue-500 p-2 py-0.5 rounded-md w-fit"
-                      >
-                        {x.name}
-                      </p>
-                    ))}
-                </div>
-              </div>
-
-              {totalTeams === 3 && (
-                <div className="w-full flex flex-col items-center">
-                  <button
-                    onClick={() => updatePlayerTeam("C")}
-                    className={`text-sm px-2 py-1 outline-none cursor-pointer font-medium rounded-md tracking-wide
-                          bg-gradient-to-br from-gray-600 to-gray-500 hover:bg-gradient-to-br
-                          hover:from-gray-500 hover:to-gray-400 w-fit mb-2`}
+                    onClick={() => updateTotalTeams(2)}
                   >
-                    SWITCH TO TEAM C
+                    2 Teams
                   </button>
-                  <div className="w-full h-40 p-3 rounded-md bg-slate-50/50">
-                    {players
-                      .filter((x) => x.team === "C")
-                      .map((x, i) => (
-                        <p
-                          key={i}
-                          className="m-2 inline-block bg-gradient-to-br from-blue-600 to-blue-500 p-2 py-0.5 rounded-md w-fit"
-                        >
-                          {x.name}
-                        </p>
-                      ))}
-                  </div>
+                  <button
+                    className={`px-4 py-2 outline-none border cursor-pointer font-medium rounded text-sm
+                    ${
+                      totalTeams === 3
+                        ? "bg-white text-blue-950"
+                        : "text-white "
+                    }`}
+                    onClick={() => updateTotalTeams(3)}
+                  >
+                    3 Teams
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Start game */}
-          <div className="mt-4">
-            <button
-              className={`m-auto flex  gap-1
+        <div className="mt-5 border-t border-t-white flex-1 flex flex-col">
+          <p className="text-lg font-medium mt-5 text-white">Team Setup</p>
+          {/* 2 teams customization */}
+          <div className="w-full flex gap-4 mt-4 flex-1">
+            <div className="w-full flex flex-col items-center flex-1">
+              <button
+                onClick={() => updatePlayerTeam("A")}
+                className="text-sm py-2 bg-white text-blue-950 font-medium tracking-wide w-full mb-3 rounded cursor-pointer"
+              >
+                Switch To Team A
+              </button>
+              <div className="w-full flex-1 rounded-md border border-white">
+                {players
+                  .filter((x) => x.team === "A")
+                  .map((x, i) => (
+                    <div
+                      key={i}
+                      className="h-1/5 p-2 flex items-stretch justify-center"
+                    >
+                      <p className="text-blue-950 font-medium tracking-wide bg-white w-full flex items-center justify-center rounded">
+                        {x.name}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Team B */}
+            <div className="w-full flex flex-col items-center flex-1">
+              <button
+                onClick={() => updatePlayerTeam("B")}
+                className="text-sm py-2 bg-white text-blue-950 font-medium tracking-wide w-full mb-3 rounded cursor-pointer"
+              >
+                Switch To Team B
+              </button>
+              <div className="w-full flex-1 rounded-md border border-white">
+                {players
+                  .filter((x) => x.team === "B")
+                  .map((x, i) => (
+                    <div
+                      key={i}
+                      className="h-1/5 p-2 flex items-stretch justify-center"
+                    >
+                      <p className="text-blue-950 font-medium tracking-wide bg-white w-full flex items-center justify-center rounded">
+                        {x.name}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {totalTeams === 3 && (
+              <div className="w-full flex flex-col items-center flex-1">
+                <button
+                  onClick={() => updatePlayerTeam("C")}
+                  className="text-sm py-2 bg-white text-blue-950 font-medium tracking-wide w-full mb-3 rounded cursor-pointer"
+                >
+                  Switch To Team C
+                </button>
+                <div className="w-full flex-1 rounded-md border border-white">
+                  {players
+                    .filter((x) => x.team === "C")
+                    .map((x, i) => (
+                      <div
+                        key={i}
+                        className="h-1/5 p-2 flex items-stretch justify-center"
+                      >
+                        <p className="text-blue-950 font-medium tracking-wide bg-white w-full flex items-center justify-center rounded">
+                          {x.name}
+                        </p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Start game */}
+        <div className="mt-6">
+          <button
+            className={`m-auto flex  gap-1
                         outline-none border-none px-3 py-2 tracking-wide text-white font-medium rounded-md
                         bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer
                         hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400`}
-            >
-              START GAME
-              <MdKeyboardDoubleArrowRight className="text-2xl font-bold" />
-            </button>
-          </div>
+          >
+            START GAME
+            <MdKeyboardDoubleArrowRight className="text-2xl font-bold" />
+          </button>
         </div>
       </div>
     </div>,

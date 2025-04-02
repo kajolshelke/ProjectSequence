@@ -6,7 +6,6 @@ import { playerValidationSchema } from "../validation/validationSchema.js";
 
 export default async function createRoomController(socket:Socket,nickname:string){
 
-
     try {
         
     // ------------------- Validation of host input for room creation ---------------------- //
@@ -47,10 +46,8 @@ export default async function createRoomController(socket:Socket,nickname:string
 
     // -------------------------------- Inserting room into database -------------------- //
 
-    
-    await db.setEx(roomID,Number(process.env.ROOM_DESTROY_TIME),JSON.stringify(room))
-    
 
+    await db.setEx(roomID,Number(process.env.ROOM_DESTROY_TIME),JSON.stringify(room))
 
     // --------------------------------- Host joining the room ------------------------- //
 

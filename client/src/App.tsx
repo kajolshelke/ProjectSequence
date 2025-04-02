@@ -1,20 +1,45 @@
 import "./App.css";
-import CardDeck from "./components/CardDeck";
-import GameBoard from "./components/GameBoard";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import NotFound from "./pages/NotFound";
+import ErrorPage from "./pages/ErrorPage";
+import socket from "./socket/socket";
+import { useEffect } from "react";
+import CreateRoomPage from "./pages/CreateRoomPage";
+import JoinRoomPage from "./pages/JoinRoomPage";
 
-import Homepage from "./components/Homepage";
-import PlayingCard from "./components/PlayingCard";
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomePage />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/create",
+    element: <CreateRoomPage />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/join",
+    element: <JoinRoomPage />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+]);
 
 function App() {
-  return (
-    <>
-      <Homepage />
+  useEffect(() => {
+    socket.connect();
 
-      {/* <GameBoard /> */}
-      {/* <CardDeck /> */}
-      {/* <PlayingCard rank={0} suit="Joker" /> */}
-    </>
-  );
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  return <RouterProvider router={router} />;
 }
 
 export default App;

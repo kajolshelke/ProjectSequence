@@ -1,11 +1,11 @@
 import { Socket } from "socket.io";
 import db from "../db/redisConfig.js";
 import { playerValidationSchema, roomIDValidationSchema, roomValidationSchema } from "../validation/validationSchema.js";
-import { Room } from "../types/types.js";
+import { Player,Room } from "../types/types.js";
 import z from "zod";
 import preGameBroadcastController from "./preGameBroadcast.js";
 
-export default async function lobbySettingsUpdate(socket:Socket,roomID:string,duration:number,totalTeams:number,nickname:string) {
+export default async function leaveRoom(socket:Socket,roomID:string,nickname:string) {
 
     try {
 
@@ -14,20 +14,15 @@ export default async function lobbySettingsUpdate(socket:Socket,roomID:string,du
         const validationSchema = z.object({
             nickname:playerValidationSchema.shape.name,
             roomID: roomIDValidationSchema,
-            duration:roomValidationSchema.shape.duration,
-            totalTeams:roomValidationSchema.shape.totalTeams
         })
 
-        const validationResult = validationSchema.safeParse({roomID,duration,totalTeams,nickname});
+        const validationResult = validationSchema.safeParse({roomID,nickname});
 
         if(!validationResult.success){
             throw new Error(validationResult.error.errors[0].message)
         }
 
         //  ------- Extracting the data after validation ----- //
-
-        const validData = validationResult.data;
-        
 
         const room = await db.get(roomID);
 
@@ -53,51 +48,23 @@ export default async function lobbySettingsUpdate(socket:Socket,roomID:string,du
 
         // --------- To check if the lobby settings are requested to be altered by host of room ---------//
 
-        if(!hostCheck[0].host){
-            throw new Error("Player is not a host")
+        if(hostCheck[0].host){
+            throw new Error("Host cannot leave the room")
         }
 
+        const updatedPlayers = data.players.filter((x) => x.name !== nickname);
 
-
-        // ----- Checking the existing no. of total teams ---- //
-       
-        const oldTotalTeamsCount = data.totalTeams;
-
-        // ----- Checking whether the old no. of teams is 3 and new no. of teams is 2 ...
-        // ... so the players in team 3 should be alternatively distributed between teams 1 and 2 ------ // 
-        if(oldTotalTeamsCount === 3 && validData.totalTeams === 2){
-            const playersList = [...data.players];
-
-            // To put team C or team 3 members alternatively in teams A and B
-            let parity = 0;  
-            playersList.forEach(x => {
-                if(x.team === "C"){
-                    if(parity === 0){
-                        x.team = "A";
-                        parity = 1;
-                    }else{
-                        x.team = "B";
-                        parity = 0;
-                    }
-                }
-            } )
-
-            //  Setting the data with updated teams and player list
-            data.players = playersList;
-        }
-
-        // ------ Updating the player turn duration and total teams no. ----- // 
-        data.duration = validData.duration;
-        data.totalTeams = validData.totalTeams;
-
+        data.players = updatedPlayers;
 
         //  ----- Updating the database with these changes ----- //
 
         await db.set(roomID,JSON.stringify(data),{KEEPTTL:true,XX:true})
 
-        
+        socket.leave(roomID);
 
         preGameBroadcastController(roomID,data.players,data.totalTeams,data.duration);
+
+        socket.emit("leaveRoom","Room Left");
 
         
     } catch (error:any) {
@@ -107,5 +74,3 @@ export default async function lobbySettingsUpdate(socket:Socket,roomID:string,du
     }
     
 }
-
-

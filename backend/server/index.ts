@@ -9,6 +9,8 @@ import joinRoomController from "../controllers/joinRoomController.js";
 import teamSwitchController from "../controllers/teamSwitchController.js";
 import lobbySettingsUpdate from "../controllers/lobbySettingsUpdateController.js";
 import db from "../db/redisConfig.js";
+import destroyRoomController from "../controllers/destroyRoomController.js";
+import leaveRoom from "../controllers/controllerLeaveRoom.js";
 
 
 dotenv.config()
@@ -47,6 +49,13 @@ io.on("connection",(socket)=>{
         await getRoomStateController(socket,roomID,nickname)
     })
 
+    socket.on("roomDestroy", async(roomID,name) => {
+        await destroyRoomController(socket, name, roomID);
+    })
+
+    socket.on("leaveRoom", (roomID, name) => {
+        leaveRoom(socket,roomID,name)
+    })
 
     socket.on("disconnect",()=>{
         disconnectController(socket)

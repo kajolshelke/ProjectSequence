@@ -7,7 +7,7 @@ import preGameBroadcastController from "./preGameBroadcast.js";
 
 
 export default async function teamSwitchController(socket:Socket,team:string,roomID:string,nickname:string) {
-    
+
     try {
 
         // ---------- Validation of player name, room ID & switching of team name for a player ------- //
