@@ -3,7 +3,8 @@ type Player = {
     team:"A"| "B" | "C",
     time:number|null,
     hand:string[]|null,
-    host:boolean
+    host:boolean,
+    id : string,
 }
 
 

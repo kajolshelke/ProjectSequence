@@ -45,7 +45,6 @@ function App() {
     <GlobalErrorProvider>
       <div className="w-[100vw] h-[100vh] font-montserrat bg-gray-300 overflow-hidden">
         <RouterProvider router={router} />
-        <ErrorToast />
       </div>
     </GlobalErrorProvider>
   );

@@ -120,7 +120,7 @@ const CreateRoomPage = () => {
           className="text-white text-sm bg-blue-950 px-3 py-1.5 rounded cursor-pointer flex items-center justify-center w-40"
           onClick={() => emitterRoomDestroy(roomID)}
         >
-          Close Room
+          Close
         </button>
       </div>
       <div>

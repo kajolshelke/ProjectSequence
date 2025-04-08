@@ -148,7 +148,7 @@ const JoinRoomPage = () => {
       </div>
       <div className="mt-8">
         <div className="font-medium text-lg mt-4 text-blue-950 flex items-center">
-          Configure Game Settings <FaCog className="ml-2" />
+          Game Settings <FaCog className="ml-2" />
         </div>
         <div className="mb-4 mt-4 flex gap-10">
           <div className="pb-5">
@@ -160,8 +160,8 @@ const JoinRoomPage = () => {
               <button
                 className={
                   roomState.duration === 120000
-                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none cursor-pointer"
-                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
+                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none"
+                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border"
                 }
               >
                 2 minutes
@@ -169,8 +169,8 @@ const JoinRoomPage = () => {
               <button
                 className={
                   roomState.duration === 300000
-                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none cursor-pointer"
-                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
+                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none"
+                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border"
                 }
               >
                 5 minutes
@@ -186,8 +186,8 @@ const JoinRoomPage = () => {
               <button
                 className={
                   roomState.totalTeams === 2
-                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none cursor-pointer"
-                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
+                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none"
+                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border"
                 }
               >
                 2 Teams
@@ -195,8 +195,8 @@ const JoinRoomPage = () => {
               <button
                 className={
                   roomState.totalTeams === 3
-                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none cursor-pointer"
-                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
+                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none"
+                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border"
                 }
               >
                 3 Teams
