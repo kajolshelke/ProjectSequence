@@ -12,14 +12,15 @@ import db from "../db/redisConfig.js";
 import destroyRoomController from "../controllers/destroyRoomController.js";
 import leaveRoom from "../controllers/controllerLeaveRoom.js";
 
-
+//Initial Configuration 
 dotenv.config()
 const app = express();
 const PORT = 3000;
 
-
+//Create Server
 const server  = createServer(app);
 
+//Server Config
 export const io = new Server (server,{
     cors:{
         origin:"http://localhost:5173",
@@ -27,6 +28,8 @@ export const io = new Server (server,{
     }
 }) 
 
+
+//Routes
 io.on("connection",(socket)=>{
 
     socket.on("createRoom",async ({nickname})=>{
@@ -84,8 +87,6 @@ server.on("close",()=>{
         console.log("Database is disconnected")
         console.log("Server closed")
     });
-    
-
 })
 
 

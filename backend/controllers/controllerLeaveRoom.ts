@@ -5,18 +5,18 @@ import { Player,Room } from "../types/types.js";
 import z from "zod";
 import preGameBroadcastController from "./preGameBroadcast.js";
 
-export default async function leaveRoom(socket:Socket,roomID:string,nickname:string) {
+export default async function leaveRoom(socket:Socket,roomID:string,id : string) {
 
     try {
 
         // --- Validation of room ID, player turn duration & no.of total teams for lobby settings update --- //
 
         const validationSchema = z.object({
-            nickname:playerValidationSchema.shape.name,
+            id:playerValidationSchema.shape.id,
             roomID: roomIDValidationSchema,
         })
 
-        const validationResult = validationSchema.safeParse({roomID,nickname});
+        const validationResult = validationSchema.safeParse({roomID,id});
 
         if(!validationResult.success){
             throw new Error(validationResult.error.errors[0].message)
@@ -39,7 +39,7 @@ export default async function leaveRoom(socket:Socket,roomID:string,nickname:str
 
         // --------- To check whether the player with given name exists in room -------//
 
-        const hostCheck = data.players.filter(x => x.name === nickname);
+        const hostCheck = data.players.filter(x => x.id === id);
 
         if(hostCheck.length !== 1){
             throw new Error("Player doesn't exist")
@@ -52,7 +52,7 @@ export default async function leaveRoom(socket:Socket,roomID:string,nickname:str
             throw new Error("Host cannot leave the room")
         }
 
-        const updatedPlayers = data.players.filter((x) => x.name !== nickname);
+        const updatedPlayers = data.players.filter((x) => x.id !== id);
 
         data.players = updatedPlayers;
 

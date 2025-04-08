@@ -7,6 +7,8 @@ import socket from "./socket/socket";
 import { useEffect } from "react";
 import CreateRoomPage from "./pages/CreateRoomPage";
 import JoinRoomPage from "./pages/JoinRoomPage";
+import ErrorToast from "./components/ErrorToast";
+import GlobalErrorProvider from "./contexts/ErrorContext";
 
 const router = createBrowserRouter([
   {
@@ -39,7 +41,14 @@ function App() {
     };
   }, []);
 
-  return <RouterProvider router={router} />;
+  return (
+    <GlobalErrorProvider>
+      <div className="w-[100vw] h-[100vh] font-montserrat bg-gray-300 overflow-hidden">
+        <RouterProvider router={router} />
+        <ErrorToast />
+      </div>
+    </GlobalErrorProvider>
+  );
 }
 
 export default App;

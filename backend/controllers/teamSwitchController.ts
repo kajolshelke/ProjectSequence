@@ -6,19 +6,19 @@ import { playerValidationSchema,roomIDValidationSchema } from "../validation/val
 import preGameBroadcastController from "./preGameBroadcast.js";
 
 
-export default async function teamSwitchController(socket:Socket,team:string,roomID:string,nickname:string) {
+export default async function teamSwitchController(socket:Socket,team:string,roomID:string,id:string) {
 
     try {
 
         // ---------- Validation of player name, room ID & switching of team name for a player ------- //
         
         const validationSchema = z.object({
-            nickname:playerValidationSchema.shape.name,
+            id:playerValidationSchema.shape.id,
             roomID:roomIDValidationSchema,
             team:playerValidationSchema.shape.team
         })
 
-        const validationResult = validationSchema.safeParse({team,roomID,nickname})
+        const validationResult = validationSchema.safeParse({team,roomID,id})
 
         if(!validationResult.success){
             throw new Error(validationResult.error.errors[0].message)
@@ -59,14 +59,14 @@ export default async function teamSwitchController(socket:Socket,team:string,roo
 
         const playerList = [...data.players];
 
-        if(playerList.filter(x => x.name === validData.nickname).length !== 1){
+        if(playerList.filter(x => x.id === id).length !== 1){
             throw new Error("Player not found")
         }
 
-        //  -------- Findind the given player in room to change their team ------- //
+        //  -------- Finding the given player in room to change their team ------- //
         data.players.forEach( x => {
-            if(x.name === validData.nickname){
-                x.team = validData.team ;
+            if(x.id === id){
+                x.team = validData.team;
             }
         })
         

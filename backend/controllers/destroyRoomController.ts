@@ -5,7 +5,7 @@ import z from "zod"
 import destroyRoomBroadcast from "./destroyRoomBroadCast.js";
 import { Room } from "../types/types.js";
 
-export default async function destroyRoomController(socket:Socket,nickname:string,roomID : string){
+export default async function destroyRoomController(socket:Socket,id:string,roomID : string){
 
     try {
 
@@ -14,10 +14,10 @@ export default async function destroyRoomController(socket:Socket,nickname:strin
     // ------------------- Validation of host input for room destroy ---------------------- //
 
     const validationSchema = z.object({
-                        nickname:playerValidationSchema.shape.name,
+                        id:playerValidationSchema.shape.id,
                         roomID:roomIDValidationSchema
                     })
-    const validationResult = validationSchema.safeParse({nickname,roomID});
+    const validationResult = validationSchema.safeParse({id,roomID});
 
     if(!validationResult.success){
         throw new Error(validationResult.error.errors[0].message)
@@ -40,7 +40,7 @@ export default async function destroyRoomController(socket:Socket,nickname:strin
 
     // --------- To check whether the player with given name exists in room -------//
 
-    const hostCheck = data.players.filter(x => x.name === nickname);
+    const hostCheck = data.players.filter(x => x.id === id);
 
     if(hostCheck.length !== 1){
         throw new Error("Player doesn't exist")

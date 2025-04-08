@@ -1,17 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import socket from "../socket/socket";
 import { Player } from "../types/types";
-import { FaCopy } from "react-icons/fa";
+import { FaCog, FaCopy } from "react-icons/fa";
 import emitterUpdatePlayerTeam from "../controllers/emitters/emitterUpdatePlayerTeam";
 import emitterJoinRoom from "../controllers/emitters/emitterJoinRoom";
 import emitterLeaveRoom from "../controllers/emitters/emitterLeaveRoom";
+import { GlobalErrorContext } from "../contexts/ErrorContext";
 
 const JoinRoomPage = () => {
   //Get url params for name
-  const [params, setParams] = useSearchParams();
+  const [params, _] = useSearchParams();
   const nickname = params.get("name");
-  const inviteLink = params.get("roomID");
+  const roomID = params.get("roomID");
+
+  //Error Context
+  const { setError } = useContext(GlobalErrorContext);
 
   //Room State
   const [roomState, setRoomState] = useState<{
@@ -26,6 +30,7 @@ const JoinRoomPage = () => {
         time: null,
         hand: null,
         host: true,
+        id: "",
       },
     ],
     totalTeams: 2,
@@ -40,8 +45,8 @@ const JoinRoomPage = () => {
 
   //Create Room Upon Page Load
   useEffect(() => {
-    if (nickname !== null && inviteLink !== null) {
-      emitterJoinRoom(inviteLink, nickname);
+    if (nickname !== null && roomID !== null) {
+      emitterJoinRoom(roomID, nickname);
     }
   }, [nickname]);
 
@@ -49,7 +54,7 @@ const JoinRoomPage = () => {
     const isReloaded = sessionStorage.getItem("join-room-reload");
 
     if (isReloaded) {
-      emitterLeaveRoom(inviteLink ? inviteLink : "", nickname ? nickname : "");
+      emitterLeaveRoom(roomID ? roomID : "", nickname ? nickname : "");
       navigate("/");
     }
 
@@ -70,16 +75,22 @@ const JoinRoomPage = () => {
       }
     );
 
+    socket.on("playerJoinRoom", (id: number) => {
+      localStorage.setItem("playerID", id.toString());
+    });
+
     socket.on("userError", (error) => {
-      alert(error);
+      setError(error);
     });
 
     socket.on("leaveRoom", () => {
       navigate("/");
+      setError("Room Left");
     });
 
     socket.on("roomDestroy", () => {
       navigate("/");
+      setError("Room Destroyed");
     });
 
     return () => {
@@ -92,8 +103,8 @@ const JoinRoomPage = () => {
 
   // Copying Link To Clipboard
   function copyLinkToClipboard() {
-    if (!inviteLink) return;
-    navigator.clipboard.writeText(`http://localhost:5173?roomID=${inviteLink}`);
+    if (!roomID) return;
+    navigator.clipboard.writeText(`http://localhost:5173?roomID=${roomID}`);
     setCopyLink(true);
     setTimeout(() => setCopyLink(false), 1000);
   }
@@ -110,10 +121,7 @@ const JoinRoomPage = () => {
         <button
           className="text-white text-sm bg-blue-950 px-3 py-1.5 rounded cursor-pointer flex items-center justify-center w-40"
           onClick={() =>
-            emitterLeaveRoom(
-              inviteLink ? inviteLink : "",
-              nickname ? nickname : ""
-            )
+            emitterLeaveRoom(roomID ? roomID : "", nickname ? nickname : "")
           }
         >
           Back
@@ -126,7 +134,7 @@ const JoinRoomPage = () => {
               Invite others using the following link :
             </p>
             <p className="text-blue-950 text-sm tracking-wide mt-2">
-              {`http://localhost:5173?roomID=${inviteLink}`}
+              {`http://localhost:5173?roomID=${roomID}`}
             </p>
           </div>
           <button
@@ -138,19 +146,72 @@ const JoinRoomPage = () => {
           </button>
         </div>
       </div>
+      <div className="mt-8">
+        <div className="font-medium text-lg mt-4 text-blue-950 flex items-center">
+          Configure Game Settings <FaCog className="ml-2" />
+        </div>
+        <div className="mb-4 mt-4 flex gap-10">
+          <div className="pb-5">
+            <p className="mt-3 font-medium text-blue-950">Turn Duration</p>
+            <p className="font-medium text-blue-950 text-xs tracking-wide">
+              Set how much time each player has to make a move.
+            </p>
+            <div className="mt-3 flex items-center gap-5">
+              <button
+                className={
+                  roomState.duration === 120000
+                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none cursor-pointer"
+                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
+                }
+              >
+                2 minutes
+              </button>
+              <button
+                className={
+                  roomState.duration === 300000
+                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none cursor-pointer"
+                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
+                }
+              >
+                5 minutes
+              </button>
+            </div>
+          </div>
+          <div className="pl-10 border-l-blue-950 border-l pb-5">
+            <p className="mt-3 font-medium text-blue-950">Number Of Teams</p>
+            <p className="font-medium text-blue-950 text-xs tracking-wide">
+              Set how many teams should be available.
+            </p>
+            <div className="mt-3 flex items-center gap-5">
+              <button
+                className={
+                  roomState.totalTeams === 2
+                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none cursor-pointer"
+                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
+                }
+              >
+                2 Teams
+              </button>
+              <button
+                className={
+                  roomState.totalTeams === 3
+                    ? "w-30 py-1.5 rounded text-sm bg-blue-950 text-white border-none cursor-pointer"
+                    : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
+                }
+              >
+                3 Teams
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="mt-3 border-t border-t-blue-950 flex-1 flex flex-col">
         <p className="text-lg font-medium mt-4 text-blue-950">Team Setup</p>
         <div className="w-full flex gap-4 mt-4 flex-1">
           <div className="w-full flex flex-col flex-1">
             <button
               className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
-              onClick={() =>
-                emitterUpdatePlayerTeam(
-                  inviteLink ? inviteLink : "",
-                  "A",
-                  nickname ? nickname : ""
-                )
-              }
+              onClick={() => emitterUpdatePlayerTeam(roomID ? roomID : "", "A")}
             >
               Switch To Team A
             </button>
@@ -172,13 +233,7 @@ const JoinRoomPage = () => {
           <div className="w-full flex flex-col flex-1">
             <button
               className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
-              onClick={() =>
-                emitterUpdatePlayerTeam(
-                  inviteLink ? inviteLink : "",
-                  "B",
-                  nickname ? nickname : ""
-                )
-              }
+              onClick={() => emitterUpdatePlayerTeam(roomID ? roomID : "", "B")}
             >
               Switch To Team B
             </button>
@@ -202,11 +257,7 @@ const JoinRoomPage = () => {
               <button
                 className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
                 onClick={() =>
-                  emitterUpdatePlayerTeam(
-                    inviteLink ? inviteLink : "",
-                    "C",
-                    nickname ? nickname : ""
-                  )
+                  emitterUpdatePlayerTeam(roomID ? roomID : "", "C")
                 }
               >
                 Switch To Team C

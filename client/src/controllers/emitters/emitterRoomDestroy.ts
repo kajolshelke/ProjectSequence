@@ -1,5 +1,6 @@
 import socket from "../../socket/socket";
 
-export default function emitterRoomDestroy(nickname : string, roomID : string) {
-    socket.emit("roomDestroy", roomID, nickname);
+export default function emitterRoomDestroy(roomID : string | null) {
+    const id = localStorage.getItem("playerID")
+    socket.emit("roomDestroy", roomID, id);
 }

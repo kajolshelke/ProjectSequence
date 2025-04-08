@@ -1,5 +1,6 @@
 type Player = {
     name:string,
+    id:string,
     team:"A"| "B" | "C",
     time:number|null,
     hand:string[]|null,

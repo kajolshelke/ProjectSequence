@@ -4,7 +4,9 @@ export const roomIDValidationSchema = z.string({message:"Room ID must be string"
 
 export const playerValidationSchema = z.object({
     name:z.string({message:"Nickname must be text"}).min(3,{message:"Nickname must be at least 3 characters long"}).max(20,{message:"Nickname must be at most 20 characters long"}),
-    team:z.enum(["A","B","C"])
+    team:z.enum(["A","B","C"]),
+    id:z.preprocess((id) => { const parsed = Number(id);
+        return Number.isNaN(parsed) ? undefined : parsed;} , z.number().int().min(10000).max(99999))
 })
 
 export const roomValidationSchema = z.object({

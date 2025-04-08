@@ -6,7 +6,7 @@ import { playerValidationSchema,roomIDValidationSchema } from "../validation/val
 import preGameBroadcastController from "./preGameBroadcast.js";
 
 
-export default async function joinRoomController(socket:Socket,nickname:string,roomID:string) {
+export default async function joinRoomController(socket:Socket, nickname : string,roomID:string) {
 
     try {
 
@@ -52,6 +52,30 @@ export default async function joinRoomController(socket:Socket,nickname:string,r
         }
 
 
+        //------------------------- Generate Id ------------------------------------------------- //
+
+        let duplicateTrigger = true;
+        let id = ""
+
+
+        //If someone else has the same id generate another one
+        while(duplicateTrigger) {
+
+            id = Math.floor(10000 + Math.random() * 90000).toString();
+
+            duplicateTrigger = false;
+
+            data.players.forEach((x) => { 
+                if(x.id === id) {
+                duplicateTrigger = true    
+            }
+        })
+
+        }
+
+
+
+
         // ----- When a player joins room, they will be initially placed in teams as per the following  ----- //
 
 
@@ -67,17 +91,17 @@ export default async function joinRoomController(socket:Socket,nickname:string,r
             let teamCCount = data.players.filter(x => x.team === "C").length;
 
             if(teamACount <= teamBCount && teamACount <= teamCCount){
-                data.players.push({name:nickname,team:"A",time:null,hand:null,host:false })
+                data.players.push({name:nickname,team:"A",time:null,hand:null,host:false, id })
             }else if(teamBCount <= teamACount && teamBCount <= teamCCount){
-                data.players.push({name:nickname,team:"B",time:null,hand:null,host:false })
+                data.players.push({name:nickname,team:"B",time:null,hand:null,host:false, id })
             }else{
-                data.players.push({name:nickname,team:"C",time:null,hand:null,host:false })
+                data.players.push({name:nickname,team:"C",time:null,hand:null,host:false, id })
                 }
         }else{
             if(teamACount <= teamBCount){
-                data.players.push({name:nickname,team:"A",time:null,hand:null,host:false })
+                data.players.push({name:nickname,team:"A",time:null,hand:null,host:false, id })
             }else{
-                data.players.push({name:nickname,team:"B",time:null,hand:null,host:false })
+                data.players.push({name:nickname,team:"B",time:null,hand:null,host:false, id })
             }
         }
 
@@ -98,8 +122,7 @@ export default async function joinRoomController(socket:Socket,nickname:string,r
 
         preGameBroadcastController(roomID,data.players, data.totalTeams, data.duration)
 
-        
-
+        socket.emit("playerJoinRoom",id)
         
             
     } catch (error:any) {

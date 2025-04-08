@@ -1,9 +1,10 @@
 import { IoPeople } from "react-icons/io5";
 import { IoMdCreate } from "react-icons/io";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import CreateRoomModal from "./CreateRoomModal";
 import JoinRoomModal from "./JoinRoomModal";
 import { io, Socket } from "socket.io-client";
+import { GlobalErrorContext } from "../contexts/ErrorContext";
 
 const socket: Socket = io("http://localhost:3000");
 
@@ -12,6 +13,8 @@ const Homepage = () => {
   const [createRoom, setCreateRoom] = useState(false);
   const [roomID, setRoomID] = useState<string>("");
   const [joinRoom, setJoinRoom] = useState(false);
+
+  const { setError } = useContext(GlobalErrorContext);
 
   const params = new URLSearchParams(window.location.search);
   const roomIDFromURL = params.get("roomID");
@@ -66,7 +69,9 @@ const Homepage = () => {
             className={`outline-none border-none rounded-md px-4 py-2 text-blue-950/80 font-medium text-center
                     bg-blue-50 shadow-lg`}
             value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
+            onChange={(e) => {
+              setNickname(e.target.value), setError(e.target.value);
+            }}
           />
         </div>
         <div className="w-max mt-12 mb-12 p-2 flex flex-col gap-4 m-auto">

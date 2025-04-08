@@ -5,20 +5,20 @@ import { Room } from "../types/types.js";
 import z from "zod";
 import preGameBroadcastController from "./preGameBroadcast.js";
 
-export default async function lobbySettingsUpdate(socket:Socket,roomID:string,duration:number,totalTeams:number,nickname:string) {
+export default async function lobbySettingsUpdate(socket:Socket,roomID:string,duration:number,totalTeams:number,id:string) {
 
     try {
 
         // --- Validation of room ID, player turn duration & no.of total teams for lobby settings update --- //
 
         const validationSchema = z.object({
-            nickname:playerValidationSchema.shape.name,
+            id:playerValidationSchema.shape.id,
             roomID: roomIDValidationSchema,
             duration:roomValidationSchema.shape.duration,
             totalTeams:roomValidationSchema.shape.totalTeams
         })
 
-        const validationResult = validationSchema.safeParse({roomID,duration,totalTeams,nickname});
+        const validationResult = validationSchema.safeParse({roomID,duration,totalTeams,id});
 
         if(!validationResult.success){
             throw new Error(validationResult.error.errors[0].message)
@@ -44,7 +44,7 @@ export default async function lobbySettingsUpdate(socket:Socket,roomID:string,du
 
         // --------- To check whether the player with given name exists in room -------//
 
-        const hostCheck = data.players.filter(x => x.name === nickname);
+        const hostCheck = data.players.filter(x => x.id === id);
 
         if(hostCheck.length !== 1){
             throw new Error("Player doesn't exist")

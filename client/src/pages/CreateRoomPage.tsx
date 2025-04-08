@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import emitterCreateRoom from "../controllers/emitters/emitterCreateRoom";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import socket from "../socket/socket";
@@ -9,12 +9,16 @@ import emitterUpdatePlayerTeam from "../controllers/emitters/emitterUpdatePlayer
 import emitterUpdateTotalTeams from "../controllers/emitters/emitterUpdateTotalTeams";
 import emitterUpdateTurnDuration from "../controllers/emitters/emitterUpdateTurnDuration";
 import emitterRoomDestroy from "../controllers/emitters/emitterRoomDestroy";
+import { GlobalErrorContext } from "../contexts/ErrorContext";
 
 const CreateRoomPage = () => {
   //Get url params for name
   const [params, setParams] = useSearchParams();
   const nickname = params.get("name");
-  const inviteLink = params.get("roomID");
+  const roomID = params.get("roomID");
+
+  //Error Context
+  const { setError } = useContext(GlobalErrorContext);
 
   //Navigator
   const navigate = useNavigate();
@@ -29,6 +33,7 @@ const CreateRoomPage = () => {
       {
         name: nickname ? nickname : "",
         team: "A",
+        id: "",
         time: null,
         hand: null,
         host: true,
@@ -40,7 +45,6 @@ const CreateRoomPage = () => {
 
   //Subsidiary States
   const [copyLink, setCopyLink] = useState(false);
-  const [roomID, setRoomId] = useState("");
 
   //Create Room Upon Page Load
   useEffect(() => {
@@ -55,10 +59,7 @@ const CreateRoomPage = () => {
     const isReloaded = sessionStorage.getItem("create-room-reload");
 
     if (isReloaded) {
-      emitterRoomDestroy(
-        nickname ? nickname : "",
-        inviteLink ? inviteLink : ""
-      );
+      emitterRoomDestroy(roomID);
       navigate("/");
     }
 
@@ -80,18 +81,19 @@ const CreateRoomPage = () => {
     );
 
     socket.on("userError", (error) => {
-      alert(error);
+      setError(error);
     });
 
     //Acknowledgement Of Room Creation And Receive Room ID
-    socket.on("roomCreated", ({ roomID }) => {
-      setRoomId(roomID);
+    socket.on("roomCreated", (roomID, playerId) => {
+      localStorage.setItem("playerID", playerId); //Set Player Id in local storage
       nickname === null
         ? setParams({ roomID })
         : setParams({ roomID, name: nickname });
     });
 
     socket.on("roomDestroy", () => {
+      setError("Room Destroyed");
       navigate("/");
     });
 
@@ -104,8 +106,8 @@ const CreateRoomPage = () => {
 
   // Copying Link To Clipboard
   function copyLinkToClipboard() {
-    if (!inviteLink) return;
-    navigator.clipboard.writeText(`http://localhost:5173?roomID=${inviteLink}`);
+    if (!roomID) return;
+    navigator.clipboard.writeText(`http://localhost:5173?roomID=${roomID}`);
     setCopyLink(true);
     setTimeout(() => setCopyLink(false), 1000);
   }
@@ -116,7 +118,7 @@ const CreateRoomPage = () => {
         <p className="text-2xl text-blue-950 font-medium">{`Room Hosted By ${nickname}`}</p>
         <button
           className="text-white text-sm bg-blue-950 px-3 py-1.5 rounded cursor-pointer flex items-center justify-center w-40"
-          onClick={() => emitterRoomDestroy(nickname ? nickname : "", roomID)}
+          onClick={() => emitterRoomDestroy(roomID)}
         >
           Close Room
         </button>
@@ -128,7 +130,7 @@ const CreateRoomPage = () => {
               Invite others using the following link :
             </p>
             <p className="text-blue-950 text-sm tracking-wide mt-2">
-              {`http://localhost:5173?roomID=${inviteLink}`}
+              {`http://localhost:5173?roomID=${roomID}`}
             </p>
           </div>
           <button
@@ -160,8 +162,7 @@ const CreateRoomPage = () => {
                     emitterUpdateTurnDuration(
                       120000,
                       roomID,
-                      roomState.totalTeams,
-                      nickname ? nickname : ""
+                      roomState.totalTeams
                     )
                   }
                 >
@@ -177,8 +178,7 @@ const CreateRoomPage = () => {
                     emitterUpdateTurnDuration(
                       300000,
                       roomID,
-                      roomState.totalTeams,
-                      nickname ? nickname : ""
+                      roomState.totalTeams
                     )
                   }
                 >
@@ -199,12 +199,7 @@ const CreateRoomPage = () => {
                       : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
                   }
                   onClick={() =>
-                    emitterUpdateTotalTeams(
-                      roomState.duration,
-                      roomID,
-                      2,
-                      nickname ? nickname : ""
-                    )
+                    emitterUpdateTotalTeams(roomState.duration, roomID, 2)
                   }
                 >
                   2 Teams
@@ -216,12 +211,7 @@ const CreateRoomPage = () => {
                       : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
                   }
                   onClick={() =>
-                    emitterUpdateTotalTeams(
-                      roomState.duration,
-                      roomID,
-                      3,
-                      nickname ? nickname : ""
-                    )
+                    emitterUpdateTotalTeams(roomState.duration, roomID, 3)
                   }
                 >
                   3 Teams
@@ -238,9 +228,7 @@ const CreateRoomPage = () => {
           <div className="w-full flex flex-col flex-1">
             <button
               className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
-              onClick={() =>
-                emitterUpdatePlayerTeam(roomID, "A", nickname ? nickname : "")
-              }
+              onClick={() => emitterUpdatePlayerTeam(roomID, "A")}
             >
               Switch To Team A
             </button>
@@ -262,9 +250,7 @@ const CreateRoomPage = () => {
           <div className="w-full flex flex-col flex-1">
             <button
               className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
-              onClick={() =>
-                emitterUpdatePlayerTeam(roomID, "B", nickname ? nickname : "")
-              }
+              onClick={() => emitterUpdatePlayerTeam(roomID, "B")}
             >
               Switch To Team B
             </button>
@@ -287,9 +273,7 @@ const CreateRoomPage = () => {
             <div className="w-full flex flex-col flex-1">
               <button
                 className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
-                onClick={() =>
-                  emitterUpdatePlayerTeam(roomID, "C", nickname ? nickname : "")
-                }
+                onClick={() => emitterUpdatePlayerTeam(roomID, "C")}
               >
                 Switch To Team C
               </button>
