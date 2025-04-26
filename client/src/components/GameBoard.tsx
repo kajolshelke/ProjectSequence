@@ -1,165 +1,144 @@
-import { useState } from "react";
 import PlayingCard from "./PlayingCard";
+import socket from "../socket/socket";
+import { useSearchParams } from "react-router-dom";
 
-const GameBoard = () => {
-  const boardPattern = [
-    [
-      { rank: 0, suit: "Joker" },
-      { rank: 10, suit: "Spade" },
-      { rank: 12, suit: "Spade" },
-      { rank: 13, suit: "Spade" },
-      { rank: 1, suit: "Spade" },
-      { rank: 2, suit: "Diamond" },
-      { rank: 3, suit: "Diamond" },
-      { rank: 4, suit: "Diamond" },
-      { rank: 5, suit: "Diamond" },
-      { rank: 0, suit: "Joker" },
-    ],
-    [
-      { rank: 9, suit: "Spade" },
-      { rank: 10, suit: "Heart" },
-      { rank: 9, suit: "Heart" },
-      { rank: 8, suit: "Heart" },
-      { rank: 7, suit: "Heart" },
-      { rank: 6, suit: "Heart" },
-      { rank: 5, suit: "Heart" },
-      { rank: 4, suit: "Heart" },
-      { rank: 3, suit: "Heart" },
-      { rank: 6, suit: "Diamond" },
-    ],
-    [
-      { rank: 8, suit: "Spade" },
-      { rank: 12, suit: "Heart" },
-      { rank: 7, suit: "Diamond" },
-      { rank: 8, suit: "Diamond" },
-      { rank: 9, suit: "Diamond" },
-      { rank: 10, suit: "Diamond" },
-      { rank: 12, suit: "Diamond" },
-      { rank: 13, suit: "Diamond" },
-      { rank: 2, suit: "Heart" },
-      { rank: 7, suit: "Diamond" },
-    ],
-    [
-      { rank: 7, suit: "Spade" },
-      { rank: 13, suit: "Heart" },
-      { rank: 6, suit: "Diamond" },
-      { rank: 2, suit: "Club" },
-      { rank: 1, suit: "Heart" },
-      { rank: 13, suit: "Heart" },
-      { rank: 12, suit: "Heart" },
-      { rank: 1, suit: "Diamond" },
-      { rank: 2, suit: "Spade" },
-      { rank: 8, suit: "Diamond" },
-    ],
-    [
-      { rank: 6, suit: "Spade" },
-      { rank: 1, suit: "Heart" },
-      { rank: 5, suit: "Diamond" },
-      { rank: 3, suit: "Club" },
-      { rank: 4, suit: "Heart" },
-      { rank: 3, suit: "Heart" },
-      { rank: 10, suit: "Heart" },
-      { rank: 1, suit: "Club" },
-      { rank: 3, suit: "Spade" },
-      { rank: 9, suit: "Diamond" },
-    ],
-    [
-      { rank: 5, suit: "Spade" },
-      { rank: 2, suit: "Club" },
-      { rank: 4, suit: "Diamond" },
-      { rank: 4, suit: "Club" },
-      { rank: 5, suit: "Heart" },
-      { rank: 2, suit: "Heart" },
-      { rank: 9, suit: "Heart" },
-      { rank: 13, suit: "Club" },
-      { rank: 4, suit: "Spade" },
-      { rank: 10, suit: "Diamond" },
-    ],
-    [
-      { rank: 4, suit: "Spade" },
-      { rank: 3, suit: "Club" },
-      { rank: 3, suit: "Diamond" },
-      { rank: 5, suit: "Club" },
-      { rank: 6, suit: "Heart" },
-      { rank: 7, suit: "Heart" },
-      { rank: 8, suit: "Heart" },
-      { rank: 12, suit: "Club" },
-      { rank: 5, suit: "Spade" },
-      { rank: 12, suit: "Diamond" },
-    ],
-    [
-      { rank: 3, suit: "Spade" },
-      { rank: 4, suit: "Club" },
-      { rank: 2, suit: "Diamond" },
-      { rank: 6, suit: "Club" },
-      { rank: 7, suit: "Club" },
-      { rank: 8, suit: "Club" },
-      { rank: 9, suit: "Club" },
-      { rank: 10, suit: "Club" },
-      { rank: 6, suit: "Spade" },
-      { rank: 13, suit: "Diamond" },
-    ],
-    [
-      { rank: 2, suit: "Spade" },
-      { rank: 5, suit: "Club" },
-      { rank: 1, suit: "Spade" },
-      { rank: 13, suit: "Spade" },
-      { rank: 12, suit: "Spade" },
-      { rank: 10, suit: "Spade" },
-      { rank: 9, suit: "Spade" },
-      { rank: 8, suit: "Spade" },
-      { rank: 7, suit: "Spade" },
-      { rank: 1, suit: "Diamond" },
-    ],
-    [
-      { rank: 0, suit: "Joker" },
-      { rank: 6, suit: "Club" },
-      { rank: 7, suit: "Club" },
-      { rank: 8, suit: "Club" },
-      { rank: 9, suit: "Club" },
-      { rank: 10, suit: "Club" },
-      { rank: 12, suit: "Club" },
-      { rank: 13, suit: "Club" },
-      { rank: 1, suit: "Club" },
-      { rank: 0, suit: "Joker" },
-    ],
-  ] as const;
+const GameBoard = ({
+  selectedCardFromHand,
+  boardPattern,
+  formedSequenceList,
+}: {
+  selectedCardFromHand?: {
+    rank: number;
+    suit: "Heart" | "Spade" | "Club" | "Diamond";
+  };
+  boardPattern: {
+    rank: number;
+    suit: "Heart" | "Spade" | "Club" | "Diamond" | "Joker";
+    deck: 0 | 1 | null;
+    team: "A" | "B" | "C" | null;
+  }[];
+  formedSequenceList: {
+    rank: number;
+    suit: "Heart" | "Spade" | "Club" | "Diamond" | "Joker";
+    deck: 0 | 1 | null;
+  }[][];
+}) => {
+  const [params, _] = useSearchParams();
+  const roomID = params.get("roomID");
+  const id = localStorage.getItem("playerID");
 
-  const [chips, setChips] = useState(
-    Array(boardPattern.flat().length).fill(null)
-  );
-  const [turn, setTurn] = useState(true);
+  function handleMove(
+    rank: number,
+    suit: "Heart" | "Spade" | "Club" | "Diamond" | "Joker",
+    deck: 0 | 1 | null
+  ) {
+    if (deck !== null) {
+      socket.emit("playerMadeMove", id, roomID, selectedCardFromHand, {
+        rank,
+        suit,
+        deck,
+      });
+    }
+  }
 
-  function placeChip(index: number) {
-    setChips((prevChips) => {
-      if (prevChips[index] !== null) return prevChips;
-      const newChips = [...prevChips];
-      newChips[index] = turn
-        ? "bg-gradient-to-br from-orange-600 to-orange-400"
-        : "bg-gradient-to-br from-green-800 to-green-600";
-
-      return newChips;
-    });
-    setTurn((prevTurn) => !prevTurn);
+  function enableCard(card: {
+    rank: number;
+    suit: "Heart" | "Spade" | "Club" | "Diamond" | "Joker";
+    deck: 0 | 1 | null;
+    team: "A" | "B" | "C" | null;
+  }) {
+    if (selectedCardFromHand && card.suit !== "Joker") {
+      if (
+        selectedCardFromHand.rank === 11 &&
+        (selectedCardFromHand.suit === "Club" ||
+          selectedCardFromHand.suit === "Spade")
+      ) {
+        return false;
+      } else if (
+        selectedCardFromHand.rank === 11 &&
+        (selectedCardFromHand.suit === "Diamond" ||
+          selectedCardFromHand.suit === "Heart")
+      ) {
+        if (
+          boardPattern.filter(
+            (x) =>
+              x.rank === card.rank &&
+              x.suit === card.suit &&
+              x.deck === card.deck
+          )[0].team
+        ) {
+          return false;
+        } else {
+          if (
+            formedSequenceList
+              .flat()
+              .filter(
+                (x) =>
+                  x.rank === card.rank &&
+                  x.suit === card.suit &&
+                  x.deck === card.deck
+              ).length !== 0
+          ) {
+            return false;
+          } else {
+            return true;
+          }
+        }
+      } else {
+        if (
+          card.rank === selectedCardFromHand.rank &&
+          card.suit === selectedCardFromHand.suit
+        ) {
+          if (
+            boardPattern.filter(
+              (x) =>
+                x.rank === card.rank &&
+                x.suit === card.suit &&
+                x.deck === card.deck
+            )[0].team
+          ) {
+            return false;
+          } else {
+            if (
+              formedSequenceList
+                .flat()
+                .filter(
+                  (x) =>
+                    x.rank === card.rank &&
+                    x.suit === card.suit &&
+                    x.deck === card.deck
+                ).length !== 0
+            ) {
+              return false;
+            } else {
+              return true;
+            }
+          }
+        } else {
+          return false;
+        }
+      }
+    } else {
+      return false;
+    }
   }
 
   return (
-    <div className="bg-gradient-to-b from-blue-950 to-blue-800 flex-1 m-2 rounded-sm p-2 grid grid-cols-10 grid-rows-10 gap-2">
-      {boardPattern.flat().map((card, index) => {
+    <div className="h-full bg-blue-950/10 flex-1 rounded-sm p-2 grid grid-cols-10 grid-rows-10 gap-2 shadow-gameboard">
+      {boardPattern.map((card, index) => {
         const { rank, suit } = card;
         return (
           <div
-            className="relative h-full w-full cursor-pointer flex justify-center items-center"
+            className={`relative h-full w-full cursor-pointer flex justify-center items-center`}
             key={index}
-            onClick={() => placeChip(index)}
+            onClick={() => handleMove(card.rank, card.suit, card.deck)}
           >
-            {chips[index] && (
-              <div
-                className={`absolute  text-xl h-7 w-7 rounded-full z-10
-                            ${chips[index]}`}
-              ></div>
-            )}
-            <PlayingCard rank={rank} suit={suit} />
+            <PlayingCard
+              team={card.team}
+              rank={rank}
+              suit={suit}
+              enabled={enableCard(card)}
+            />
           </div>
         );
       })}

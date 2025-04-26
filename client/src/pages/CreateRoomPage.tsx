@@ -97,10 +97,17 @@ const CreateRoomPage = () => {
       navigate("/");
     });
 
+    // Redirecting to new page once game has started
+    socket.on("gameStarted", () => {
+      const updatedParams = new URLSearchParams(window.location.search);
+      const updatedRoomID = updatedParams.get("roomID");
+      navigate(`/ongoing?roomID=${updatedRoomID}`);
+    });
     return () => {
       socket.off("preGameUpdate");
       socket.off("roomCreated");
       socket.off("roomDestroy");
+      socket.off("gameStarted");
     };
   }, [socket]);
 
@@ -110,6 +117,13 @@ const CreateRoomPage = () => {
     navigator.clipboard.writeText(`http://localhost:5173?roomID=${roomID}`);
     setCopyLink(true);
     setTimeout(() => setCopyLink(false), 1000);
+  }
+
+  // Function to start game
+  function startGame() {
+    const playerID = localStorage.getItem("playerID");
+
+    socket.emit("newGameStarted", playerID, roomID);
   }
 
   return (
@@ -296,7 +310,10 @@ const CreateRoomPage = () => {
         </div>
       </div>
       <div className="mt-6 flex justify-center">
-        <button className="flex outline-none border-none px-3 py-2 tracking-wide text-white font-medium rounded-md bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400">
+        <button
+          onClick={startGame}
+          className="flex outline-none border-none px-3 py-2 tracking-wide text-white font-medium rounded-md bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400"
+        >
           START GAME
           <MdKeyboardDoubleArrowRight className="text-2xl font-bold" />
         </button>

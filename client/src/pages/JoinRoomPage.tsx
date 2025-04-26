@@ -46,7 +46,7 @@ const JoinRoomPage = () => {
   //Create Room Upon Page Load
   useEffect(() => {
     if (nickname !== null && roomID !== null) {
-      emitterJoinRoom(roomID, nickname);
+      emitterJoinRoom(nickname, roomID);
     }
   }, [nickname]);
 
@@ -93,11 +93,17 @@ const JoinRoomPage = () => {
       setError("Room Destroyed");
     });
 
+    // Redirecting to new page once game has started
+    socket.on("gameStarted", () => {
+      navigate(`/ongoing?roomID=${roomID}`);
+    });
+
     return () => {
       socket.off("preGameUpdate");
       socket.off("userError");
       socket.off("leaveRoom");
       socket.off("roomDestroy");
+      socket.off("gameStarted");
     };
   }, [socket]);
 

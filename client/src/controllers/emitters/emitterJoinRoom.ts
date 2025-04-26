@@ -1,7 +1,7 @@
 import socket from "../../socket/socket";
 
-function emitterJoinRoom(roomID : string | null, nickname : string) {
-    socket.emit("joinRoom", { roomID, nickname });
+function emitterJoinRoom( nickname : string,roomID : string | null) {
+    socket.emit("joinRoom",nickname,roomID );
   }
 
 

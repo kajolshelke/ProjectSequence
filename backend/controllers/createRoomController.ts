@@ -41,10 +41,14 @@ export default async function createRoomController(socket:Socket,nickname:string
         teamASequenceCount:0,
         teamBSequenceCount:0,
         teamCSequenceCount:0,
-        drawDeck:[""],
-        gameState:[""]
+        drawDeck:null,
+        noOfCardsPerPlayer:null,
+        boardState:[],
+        sequenceCardsList:[],
+        lastTurnTime:null
     } 
 
+    
 
     // -------------------------------- Inserting room into database -------------------- //
 

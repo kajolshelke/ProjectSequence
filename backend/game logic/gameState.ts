@@ -8,11 +8,12 @@ export  function checkMove(selectedCardFromHand:HandStateCard,moveCardOnBoard:Ha
     const chipState = currentBoardState.find(
         card => card.rank === moveCardOnBoard.rank && card.suit === moveCardOnBoard.suit && card.deck === moveCardOnBoard.deck
     )
-
+    
+    // if it doesnt exist ts throws error
     if(!chipState){
         throw new Error("Invalid card");
     }
-    
+
     // if drawn card is blackjack
     if(selectedCardFromHand.rank === 11 && (selectedCardFromHand.suit === "Club" || selectedCardFromHand.suit === "Spade")){
 
@@ -158,16 +159,5 @@ export  function checkMove(selectedCardFromHand:HandStateCard,moveCardOnBoard:Ha
 
 }
 
-function handCardValidator(handState:HandStateCard[],drawnCard:HandStateCard){
-    const handCheck = handState.filter(
-        card => card.rank === drawnCard.rank && card.suit === drawnCard.suit && card.deck === drawnCard.deck
-    )
-
-    if(handCheck.length === 1){
-        console.log("valid move");
-    }else{
-        throw new Error("invalid move");
-    }
-}
 
 

@@ -4,11 +4,15 @@ import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
 import ErrorPage from "./pages/ErrorPage";
 import socket from "./socket/socket";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import CreateRoomPage from "./pages/CreateRoomPage";
 import JoinRoomPage from "./pages/JoinRoomPage";
 import ErrorToast from "./components/ErrorToast";
 import GlobalErrorProvider from "./contexts/ErrorContext";
+import GameBoard from "./components/GameBoard";
+import CardDeck from "./components/CardDeck";
+import HandCard from "./components/HandCard";
+import GamePage from "./pages/GamePage";
 
 const router = createBrowserRouter([
   {
@@ -24,6 +28,11 @@ const router = createBrowserRouter([
   {
     path: "/join",
     element: <JoinRoomPage />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/ongoing",
+    element: <GamePage />,
     errorElement: <ErrorPage />,
   },
   {

@@ -11,6 +11,9 @@ import lobbySettingsUpdate from "../controllers/lobbySettingsUpdateController.js
 import db from "../db/redisConfig.js";
 import destroyRoomController from "../controllers/destroyRoomController.js";
 import leaveRoom from "../controllers/controllerLeaveRoom.js";
+import { playerHandController } from "../controllers/playerHandController.js";
+import { gameStartController } from "../controllers/gameStartController.js";
+import { moveController } from "../controllers/moveController.js";
 
 //Initial Configuration 
 dotenv.config()
@@ -32,24 +35,35 @@ export const io = new Server (server,{
 //Routes
 io.on("connection",(socket)=>{
 
-    socket.on("createRoom",async ({nickname})=>{
+    socket.on("createRoom",async (nickname)=>{
         await createRoomController(socket,nickname)
     })
 
-    socket.on("joinRoom", async({roomID,nickname})=>{
+    socket.on("joinRoom", async(nickname,roomID)=>{
         await joinRoomController(socket,nickname,roomID)
     })
 
-    socket.on("teamSwitch",async(team,roomID,nickname)=>{
-        await teamSwitchController(socket,team,roomID,nickname)
+    socket.on("teamSwitch",async(team,roomID,id)=>{
+        await teamSwitchController(socket,team,roomID,id)
     })
 
     socket.on("lobbySettingsUpdate", async(roomID,duration,totalTeams,nickname)=>{
         await lobbySettingsUpdate(socket,roomID,duration,totalTeams,nickname)
     })
 
-    socket.on("getRoomState",async (roomID,nickname)=>{
+    socket.on("getRoomState",async(roomID,nickname)=>{
         await getRoomStateController(socket,roomID,nickname)
+    })
+
+    socket.on("newGameStarted", async(playerID,roomID)=>{
+        await gameStartController(socket,playerID,roomID)
+    })
+
+    socket.on("playerHand",async(playerID,roomID)=>{
+        await playerHandController(socket,playerID,roomID)
+    })
+    socket.on("playerMadeMove", async(playerID,roomID,selectedCardFromHand,moveCardOnBoard)=>{
+        await moveController(socket,playerID,roomID,selectedCardFromHand,moveCardOnBoard)
     })
 
     socket.on("roomDestroy", async(roomID,name) => {

@@ -1,4 +1,4 @@
-import { CardInfo } from "../../types/types.js";
+import { CardInfo } from "../types/types.js";
 
 const boardPattern: CardInfo[] = [
     { i:0,j:0,rank: 0, suit: "Joker",deck:null },

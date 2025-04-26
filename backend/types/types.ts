@@ -2,7 +2,7 @@ type Player = {
     name:string,
     team:"A"| "B" | "C",
     time:number|null,
-    hand:string[]|null,
+    hand:{rank:number,suit:"Club"|"Heart"|"Diamond"|"Spade"}[]|null,
     host:boolean,
     id : string,
 }
@@ -18,8 +18,11 @@ type Room = {
     teamASequenceCount:0|1|2|3,
     teamBSequenceCount:0|1|2|3,
     teamCSequenceCount:0|1|2|3,
-    drawDeck:string[],
-    gameState:string[]
+    drawDeck:{rank:number,suit:"Club"|"Heart"|"Diamond"|"Spade"}[] | null,
+    noOfCardsPerPlayer: number | null,
+    boardState:BoardState[],
+    sequenceCardsList:SequenceCard[][],
+    lastTurnTime: number | null
 
 }
 
@@ -52,5 +55,15 @@ type HandStateCard = {
     team:"A"|"B"|"C"|null
 }
 
+type SelectedCardFromHand = {
+    rank:number,
+    suit:"Joker"|"Spade"|"Heart"|"Diamond"|"Club",
+}
 
-export type {Player,Room,CardInfo,BoardState,SequenceCard,HandStateCard}
+type MoveCardOnBoard = {
+    rank:number,
+    suit:"Joker"|"Spade"|"Heart"|"Diamond"|"Club",
+    deck:0 | 1 | null
+}
+
+export type {Player,Room,CardInfo,BoardState,SequenceCard,HandStateCard,SelectedCardFromHand,MoveCardOnBoard}

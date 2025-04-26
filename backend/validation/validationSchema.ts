@@ -13,3 +13,10 @@ export const roomValidationSchema = z.object({
     duration:z.number({message:"Duration must be a number"}).refine((duration)=>(duration === 120000 || duration === 300000),{message:"Invalid duration"}),
     totalTeams:z.number({message:"Total teams must be a number"}).refine((totalTeams)=>(totalTeams === 2 || totalTeams === 3),{message:"Invalid total teams"})
 })
+
+export const cardValidationSchema = z.object({
+    rank:z.number({message:"Rank must be a number"}).int({message:"Rank must be an integer"}).min(1,{message:"Rank must be atleast 1"}).max(13,{message:"Rank must be at most 13"}),
+    suit:z.enum(["Heart","Spade","Club","Diamond"],{message:"Invalid suit"}),
+    deck:z.number({message:"Deck must be a number"}).refine((value)=>(value === 0 || value === 1),{message:"Invalid deck number"})
+
+})
