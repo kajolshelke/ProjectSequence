@@ -4,19 +4,21 @@ import { playerValidationSchema, roomIDValidationSchema, roomValidationSchema } 
 import { Player,Room } from "../types/types.js";
 import z from "zod";
 import preGameBroadcastController from "./preGameBroadcast.js";
+import { io } from "../server/index.js";
+import { events } from "../events/events.js";
 
-export default async function leaveRoom(socket:Socket,roomID:string,id : string) {
+export default async function leaveRoomController(socket:Socket,roomID:string,playerID:string) {
 
     try {
 
         // --- Validation of room ID, player turn duration & no.of total teams for lobby settings update --- //
 
         const validationSchema = z.object({
-            id:playerValidationSchema.shape.id,
+            playerID:playerValidationSchema.shape.id,
             roomID: roomIDValidationSchema,
         })
 
-        const validationResult = validationSchema.safeParse({roomID,id});
+        const validationResult = validationSchema.safeParse({roomID,playerID});
 
         if(!validationResult.success){
             throw new Error(validationResult.error.errors[0].message)
@@ -39,7 +41,7 @@ export default async function leaveRoom(socket:Socket,roomID:string,id : string)
 
         // --------- To check whether the player with given name exists in room -------//
 
-        const hostCheck = data.players.filter(x => x.id === id);
+        const hostCheck = data.players.filter(x => x.id === playerID);
 
         if(hostCheck.length !== 1){
             throw new Error("Player doesn't exist")
@@ -52,7 +54,7 @@ export default async function leaveRoom(socket:Socket,roomID:string,id : string)
             throw new Error("Host cannot leave the room")
         }
 
-        const updatedPlayers = data.players.filter((x) => x.id !== id);
+        const updatedPlayers = data.players.filter((x) => x.id !== playerID);
 
         data.players = updatedPlayers;
 
@@ -62,9 +64,10 @@ export default async function leaveRoom(socket:Socket,roomID:string,id : string)
 
         socket.leave(roomID);
 
-        preGameBroadcastController(roomID,data.players,data.totalTeams,data.duration);
+        io.to(roomID).emit(events.roomStateAcknowledgement.name,roomID,data.players,data.totalTeams,data.duration,data.status,false)
+        
 
-        socket.emit("leaveRoom","Room Left");
+    
 
         
     } catch (error:any) {

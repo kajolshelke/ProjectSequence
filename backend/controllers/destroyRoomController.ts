@@ -1,11 +1,12 @@
 import type {Socket} from "socket.io";
 import db from "../db/redisConfig.js";
 import { playerValidationSchema, roomIDValidationSchema } from "../validation/validationSchema.js";
-import z from "zod"
-import destroyRoomBroadcast from "./destroyRoomBroadCast.js";
+import z from "zod";
 import { Room } from "../types/types.js";
+import { io } from "../server/index.js";
+import { events } from "../events/events.js";
 
-export default async function destroyRoomController(socket:Socket,id:string,roomID : string){
+export default async function destroyRoomController(socket:Socket,roomID : string,playerID:string){
 
     try {
 
@@ -14,10 +15,10 @@ export default async function destroyRoomController(socket:Socket,id:string,room
     // ------------------- Validation of host input for room destroy ---------------------- //
 
     const validationSchema = z.object({
-                        id:playerValidationSchema.shape.id,
+                        playerID:playerValidationSchema.shape.id,
                         roomID:roomIDValidationSchema
                     })
-    const validationResult = validationSchema.safeParse({id,roomID});
+    const validationResult = validationSchema.safeParse({roomID,playerID});
 
     if(!validationResult.success){
         throw new Error(validationResult.error.errors[0].message)
@@ -40,7 +41,7 @@ export default async function destroyRoomController(socket:Socket,id:string,room
 
     // --------- To check whether the player with given name exists in room -------//
 
-    const hostCheck = data.players.filter(x => x.id === id);
+    const hostCheck = data.players.filter(x => x.id === playerID);
 
     if(hostCheck.length !== 1){
         throw new Error("Player doesn't exist")
@@ -52,6 +53,8 @@ export default async function destroyRoomController(socket:Socket,id:string,room
         throw new Error("Player is not a host")
     }
 
+
+
     //------------------- Delete the room from database ---------------------- //
 
     await db.DEL(roomID);
@@ -60,7 +63,8 @@ export default async function destroyRoomController(socket:Socket,id:string,room
 
 
 
-    destroyRoomBroadcast(roomID);
+     io.to(roomID).emit(events.roomStateAcknowledgement.name,roomID,data.players,data.totalTeams,data.duration,data.status,false)
+    
     
 
     } catch (error:any) {

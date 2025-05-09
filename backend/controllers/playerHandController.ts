@@ -6,6 +6,7 @@ import {
 import { z } from "zod";
 import { Room } from "../types/types.js";
 import db from "../db/redisConfig.js";
+import { events } from "../events/events.js";
 
 export async function playerHandController(
   socket: Socket,
@@ -39,19 +40,24 @@ export async function playerHandController(
        // --------- To check whether the player with given name exists in room -------//
   
        const playerCheck = data.players.filter(x => x.id === playerID);
+
+       
   
        if(playerCheck.length !== 1){
            throw new Error("Player doesn't exist")
        }
+
+       const playerTeam = playerCheck[0].team;
   
-       const playerHand = playerCheck[0].hand;
+       const handState = playerCheck[0].hand;
 
        const firstPLayerTurn = data.players.filter(x => x.id === data.turn)[0];
 
-       const firstPLayerTurnName = firstPLayerTurn.name;
-       const firstPLayerTurnTeam = firstPLayerTurn.team;
+       const firstPLayerName = firstPLayerTurn.name;
+       const firstPLayerTeam = firstPLayerTurn.team;
+       const firstPlayerID = firstPLayerTurn.id
   
-       socket.emit("playerHandFirstUpdate",playerHand,data.drawDeck!.length,firstPLayerTurnName,firstPLayerTurnTeam,data.duration,firstPLayerTurn.id);
+       socket.emit(events.playerFirstHand.name,firstPLayerName,firstPLayerTeam,firstPlayerID,handState,playerTeam,data.drawDeck!.length,data.duration);
   } catch (error:any) {
     // ---- Notifying error ----- //
         

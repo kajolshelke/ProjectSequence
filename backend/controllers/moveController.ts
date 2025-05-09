@@ -5,6 +5,7 @@ import db from "../db/redisConfig.js";
 import { coordinateToRSD, RSDToCoordinate } from "../game logic/transformer.js";
 import { Socket } from "socket.io";
 import { io } from "../server/index.js";
+import { events } from "../events/events.js";
 
 export async function moveController(socket:Socket,playerID:string,roomID:string,selectedCardFromHand:SelectedCardFromHand,moveCardOnBoard:MoveCardOnBoard){
 
@@ -57,21 +58,7 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
          const graceTime = 500;
 
 
-         const currentTime = new Date().getTime();
-            const expiryTime = data.lastTurnTime! + data.duration + graceTime;
-
-            console.log("Current Time:", currentTime);
-            console.log("Expiry Time :", expiryTime);
-            console.log("Time Remaining:", expiryTime - currentTime);
-
-            if (currentTime > expiryTime) {
-            console.log("Time expired — emitting timeout event");
-            // Emit timeout event
-            } else {
-            console.log("Move accepted — within allowed time");
-            // Accept move
-            }
-
+         
 
          // --- Switching the turn to next player when timer runs out for a player ---//
          if(((data.lastTurnTime! + data.duration + graceTime) < new Date().getTime()) || (selectedCardFromHand === null && moveCardOnBoard === null)){
@@ -98,9 +85,9 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
  
                 await db.set(roomID,JSON.stringify(data),{KEEPTTL:true,XX:true})
         
-                io.to(roomID).emit("gameStateUpdate",data.boardState,data.sequenceCardsList,nextPlayer.id,nextPlayer.name,nextPlayer.team,data.drawDeck!.length,data.duration);
+                io.to(roomID).emit(events.playerMove.name,data.boardState,data.sequenceCardsList,nextPlayer.id,nextPlayer.name,nextPlayer.team,data.drawDeck!.length,data.duration,null,null);
         
-                socket.emit("playerHandUpdate",player[0].hand);
+                socket.emit(events.playerHandUpdate.name,player[0].hand);
             
              
          }else{
@@ -148,7 +135,7 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
 
                     // --------Checking whether the request to remove chip from board card exists in a pre formed sequence------//
                     const doesCardBelongToASequence = data.sequenceCardsList.flat().filter(
-                        card => card.rank !== moveCardOnBoard.rank && card.suit !== moveCardOnBoard.suit && card.deck !== moveCardOnBoard.deck
+                        card => card.rank === moveCardOnBoard.rank && card.suit === moveCardOnBoard.suit && card.deck === moveCardOnBoard.deck
                     )
                     if(doesCardBelongToASequence.length !== 0){
                         throw new Error("Invalid move");
@@ -239,6 +226,9 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
 
                 // --- Starting the check in one direction --- //
                 for (let d = 0; d < direction_delta.length;d++){
+
+                    let sequenceEncounter = 0;
+
                             
                 // --- Incrementing the check coordinate by 1 unit in the same direction ---//
                     for(const [di,dj] of direction_delta[d]){
@@ -258,15 +248,12 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
                             const currentCard = coordinateToRSD(new_i,new_j);
 
                             
-
                             if(currentCard){
 
                                 // ---- Checking whether the current card is a joker/border card which ultimately adds 1 to continuity count --- //
                                 if(new_i === 0 && new_j === 0 || new_i === 0 && new_j === 9 || new_i === 9 && new_j === 0 ||new_i === 9 && new_j === 9){
-
-                                    continuityCount += 1;
-                                    bufferList.push(currentCard)
-
+                                        bufferList.push(currentCard);
+                                        continuityCount += 1;
                                 }else{
 
                                     // --- Checking whether the current card has the same team chip as the one of the player playing the move --- //
@@ -276,11 +263,34 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
                                     
                                     // ---- If the current card has same team chip, incrementing the card into the list of sequences --- //
                                     if(teamCheck === playerTeam){
+
+                                       const cardBelongsToSequence = data.sequenceCardsList.flat().filter(
+                                            x => x.rank === currentCard.rank && x.suit === currentCard.suit && x.deck === currentCard.deck
+                                        ).length !== 0
+
+                                        
+                                        if(cardBelongsToSequence ){
+                                            if(sequenceEncounter === 0){
+                                                sequenceEncounter = 1;
+                                                bufferList.push(currentCard);
+                                                continuityCount += 1;
+                                            }
+                                            
+
+                                        }else{
                                             bufferList.push(currentCard);
-                                            continuityCount += 1;  
+                                            continuityCount += 1;
+
+                                        }
+
+                                                                            
+                                              
                                     }else{
                                         // --- Making the count 0 and aborting to check in that direction and changing to next direction
                                         continuityCount = 0;
+                                        bufferList=[];
+                                        sequenceEncounter = 0;
+            
                                     }
                 
 
@@ -290,7 +300,8 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
                                 // --- Pushing the card in sequence list if the count is greater than 5 and increasing player team sequence count----//
                                 if(continuityCount >= 5){
                                     sequenceList.push(bufferList);
-                                    playerTeamSequenceCount += 1
+                                    playerTeamSequenceCount += 1;
+                                    sequenceEncounter = 0;
                                     continuityCount = 1;
                                     bufferList = [currentCard]
                                 }
@@ -304,17 +315,32 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
                     // ---Making the buffer list empty and count 0 after completion of one direction --- //
                     bufferList = [];
                     continuityCount = 0;
+                    sequenceEncounter = 0;
                 }
 
 
                 data.boardState = newBoardState;
                 data.sequenceCardsList = sequenceList;
 
+                if(playerTeam === "A"){
+                    data.teamASequenceCount = playerTeamSequenceCount;
+                }
+                if(playerTeam === "B"){
+                    data.teamBSequenceCount = playerTeamSequenceCount;
+                }
+                if(playerTeam === "C"){
+                    data.teamCSequenceCount = playerTeamSequenceCount;
+                }
+
+
+
+                console.log(data.sequenceCardsList);
+
 
                 // ----  Updating the hand of player by drawing a card from deck ---- //
 
                 const currentPlayerHand = player[0].hand;
-                console.log(currentPlayerHand);
+            
 
                 // ---- Finding the used card from hand to be removed --- // 
                 const selectedCardFromHandIndex = currentPlayerHand!.findIndex(
@@ -329,7 +355,7 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
 
                 
                 const playerHandAfterMove = currentPlayerHand;
-                console.log(playerHandAfterMove);
+            
                 // ----- Checking if the deck has cards to draw ---- //
                 if(data.drawDeck!.length < 1){
                     throw new Error("No more cards in deck to draw")
@@ -337,7 +363,7 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
                 // --- Adding card from deck to player hand --- //
                 const newCard = data.drawDeck!.splice(0,1)[0];
                 playerHandAfterMove![selectedCardFromHandIndex] = newCard;
-                console.log(playerHandAfterMove);
+                
 
 
                 // ----Incrementing turn of player ---- //
@@ -361,15 +387,40 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
                 //  --- Updating timer for new turn --- //
                 data.lastTurnTime = new Date().getTime();
 
-                
+
+                let winState = null;
+                if(data.totalTeams === 2){
+                    if(data.teamASequenceCount >= 2){
+                        winState = "A";
+                    }
+                    if(data.teamBSequenceCount >= 2){
+                        winState = "B"
+                    }
+                }else{
+                    if(data.teamASequenceCount >= 1){
+                        winState = "A";
+                    }
+                    if(data.teamBSequenceCount >= 1){
+                        winState = "B"
+                    }
+                    if(data.teamASequenceCount >= 1){
+                        winState = "C";
+                    }
+                    
+                }
+                console.log(winState,data.teamASequenceCount,data.teamBSequenceCount);
 
                 //  ----- Updating the database with these changes ----- //
 
                 await db.set(roomID,JSON.stringify(data),{KEEPTTL:true,XX:true})
 
-                io.to(roomID).emit("gameStateUpdate",newBoardState,sequenceList,nextPlayer.id,nextPlayer.name,nextPlayer.team,data.drawDeck!.length,data.duration);
+                if(winState !== null){
+                  await db.DEL(roomID);
+                }
 
-                socket.emit("playerHandUpdate",playerHandAfterMove);
+                io.to(roomID).emit(events.playerMove.name,newBoardState,sequenceList,nextPlayer.id,nextPlayer.name,nextPlayer.team,data.drawDeck!.length,data.duration,winState,moveCardOnBoard);
+
+                socket.emit(events.playerHandUpdate.name,playerHandAfterMove);
     
 
 

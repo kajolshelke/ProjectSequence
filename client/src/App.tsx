@@ -1,5 +1,5 @@
 import "./App.css";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Link, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
 import ErrorPage from "./pages/ErrorPage";
@@ -13,6 +13,7 @@ import GameBoard from "./components/GameBoard";
 import CardDeck from "./components/CardDeck";
 import HandCard from "./components/HandCard";
 import GamePage from "./pages/GamePage";
+import WinState from "./components/WinState";
 
 const router = createBrowserRouter([
   {

@@ -4,16 +4,16 @@ import { Server } from "socket.io";
 import disconnectController from "../controllers/disconnectController.js";
 import dotenv from "dotenv";
 import createRoomController from "../controllers/createRoomController.js";
-import getRoomStateController from "../controllers/getRoomStateController.js";
 import joinRoomController from "../controllers/joinRoomController.js";
-import teamSwitchController from "../controllers/teamSwitchController.js";
-import lobbySettingsUpdate from "../controllers/lobbySettingsUpdateController.js";
 import db from "../db/redisConfig.js";
 import destroyRoomController from "../controllers/destroyRoomController.js";
-import leaveRoom from "../controllers/controllerLeaveRoom.js";
 import { playerHandController } from "../controllers/playerHandController.js";
 import { gameStartController } from "../controllers/gameStartController.js";
 import { moveController } from "../controllers/moveController.js";
+import { events } from "../events/events.js";
+import leaveRoomController from "../controllers/leaveRoomController.js";
+import lobbySettingsUpdateController from "../controllers/lobbySettingsUpdateController.js";
+import deadCardController from "../controllers/deadCardController.js";
 
 //Initial Configuration 
 dotenv.config()
@@ -26,7 +26,7 @@ const server  = createServer(app);
 //Server Config
 export const io = new Server (server,{
     cors:{
-        origin:"http://localhost:5173",
+        origin:"*",
         methods:["GET","POST"]
     }
 }) 
@@ -35,43 +35,39 @@ export const io = new Server (server,{
 //Routes
 io.on("connection",(socket)=>{
 
-    socket.on("createRoom",async (nickname)=>{
+    socket.on(events.createRoom.name,async (nickname)=>{
         await createRoomController(socket,nickname)
     })
 
-    socket.on("joinRoom", async(nickname,roomID)=>{
+    socket.on(events.joinRoom.name, async(nickname,roomID)=>{
         await joinRoomController(socket,nickname,roomID)
     })
 
-    socket.on("teamSwitch",async(team,roomID,id)=>{
-        await teamSwitchController(socket,team,roomID,id)
+    socket.on(events.preGameUpdateRoom.name, async(roomID,duration,totalTeams,playerID,team)=>{
+        await lobbySettingsUpdateController(socket,roomID,duration,totalTeams,playerID,team)
     })
 
-    socket.on("lobbySettingsUpdate", async(roomID,duration,totalTeams,nickname)=>{
-        await lobbySettingsUpdate(socket,roomID,duration,totalTeams,nickname)
-    })
 
-    socket.on("getRoomState",async(roomID,nickname)=>{
-        await getRoomStateController(socket,roomID,nickname)
-    })
-
-    socket.on("newGameStarted", async(playerID,roomID)=>{
+    socket.on(events.gameStart.name, async(playerID,roomID)=>{
         await gameStartController(socket,playerID,roomID)
     })
 
-    socket.on("playerHand",async(playerID,roomID)=>{
+    socket.on(events.playerFirstHand.name,async(playerID,roomID)=>{
         await playerHandController(socket,playerID,roomID)
     })
-    socket.on("playerMadeMove", async(playerID,roomID,selectedCardFromHand,moveCardOnBoard)=>{
+    socket.on(events.playerMove.name, async(playerID,roomID,selectedCardFromHand,moveCardOnBoard)=>{
         await moveController(socket,playerID,roomID,selectedCardFromHand,moveCardOnBoard)
     })
-
-    socket.on("roomDestroy", async(roomID,name) => {
-        await destroyRoomController(socket, name, roomID);
+    socket.on(events.deadCard.name, async(playerID,roomID,selectedCardFromHand)=>{
+        await deadCardController(socket,playerID,roomID,selectedCardFromHand)
     })
 
-    socket.on("leaveRoom", (roomID, name) => {
-        leaveRoom(socket,roomID,name)
+    socket.on(events.preGameDestroyRoom.name, async(roomID,playerID) => {
+        await destroyRoomController(socket,roomID,playerID);
+    })
+
+    socket.on(events.preGameLeaveRoom.name, (roomID,playerID) => {
+        leaveRoomController(socket,roomID,playerID)
     })
 
     socket.on("disconnect",()=>{

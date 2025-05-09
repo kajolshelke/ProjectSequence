@@ -2,20 +2,18 @@ import { useEffect, useState, useContext } from "react";
 import emitterCreateRoom from "../controllers/emitters/emitterCreateRoom";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import socket from "../socket/socket";
+import { events } from "../events/events";
 import { Player } from "../types/types";
 import { FaCog, FaCopy } from "react-icons/fa";
 import { MdKeyboardDoubleArrowRight } from "react-icons/md";
-import emitterUpdatePlayerTeam from "../controllers/emitters/emitterUpdatePlayerTeam";
-import emitterUpdateTotalTeams from "../controllers/emitters/emitterUpdateTotalTeams";
-import emitterUpdateTurnDuration from "../controllers/emitters/emitterUpdateTurnDuration";
 import emitterRoomDestroy from "../controllers/emitters/emitterRoomDestroy";
 import { GlobalErrorContext } from "../contexts/ErrorContext";
+import useFirstLoad from "../customHooks/useFirstLoad";
 
 const CreateRoomPage = () => {
   //Get url params for name
   const [params, setParams] = useSearchParams();
   const nickname = params.get("name");
-  const roomID = params.get("roomID");
 
   //Error Context
   const { setError } = useContext(GlobalErrorContext);
@@ -25,10 +23,16 @@ const CreateRoomPage = () => {
 
   //Room State
   const [roomState, setRoomState] = useState<{
+    roomID: string;
     players: Player[];
     totalTeams: number;
     duration: number;
+    status: boolean;
+    destroyRoomFlag: boolean;
+    playerID: string;
+    playerTeam: "A" | "B" | "C";
   }>({
+    roomID: "",
     players: [
       {
         name: nickname ? nickname : "",
@@ -41,89 +45,88 @@ const CreateRoomPage = () => {
     ],
     totalTeams: 2,
     duration: 120000,
+    status: false,
+    destroyRoomFlag: false,
+    playerID: "",
+    playerTeam: "A",
   });
 
   //Subsidiary States
   const [copyLink, setCopyLink] = useState(false);
 
-  //Create Room Upon Page Load
-  useEffect(() => {
-    const isReloaded = sessionStorage.getItem("create-room-reload");
-
-    if (nickname !== null && !isReloaded) {
-      emitterCreateRoom(nickname);
-    }
-  }, [nickname]);
-
-  useEffect(() => {
-    const isReloaded = sessionStorage.getItem("create-room-reload");
-
-    if (isReloaded) {
-      emitterRoomDestroy(roomID);
-      navigate("/");
-    }
-
-    sessionStorage.setItem("create-room-reload", "t");
-  }, []);
-
+  const isFirstLoad = useFirstLoad("create-room-reload");
   //Listen To Room Updates
   useEffect(() => {
+    if (isFirstLoad !== null) {
+      if (isFirstLoad) {
+        if (nickname !== null) {
+          emitterCreateRoom(nickname);
+        }
+      } else {
+        emitterRoomDestroy(roomState.roomID);
+        navigate("/");
+      }
+    }
     //Update On Room Configuration
     socket.on(
-      "preGameUpdate",
-      (players: Player[], totalTeams: number, duration: number) => {
-        setRoomState({
-          players,
-          totalTeams,
-          duration,
-        });
+      events.roomStateAcknowledgement.name,
+      (
+        roomID,
+        players: Player[],
+        totalTeams: number,
+        duration: number,
+        status: boolean,
+        destroyRoomFlag: boolean
+      ) => {
+        if (destroyRoomFlag) {
+          setError("Room Destroyed");
+          navigate("/");
+        } else {
+          setParams({ roomID: roomID, name: nickname ? nickname : "" });
+
+          localStorage.setItem(
+            "playerID",
+            players.filter((x) => x.name === nickname)[0].id
+          );
+
+          const playerID = players.filter((x) => x.name === nickname)[0].id;
+          const playerTeam = players.filter((x) => x.name === nickname)[0].team;
+          if (status) {
+            navigate(`/ongoing?roomID=${roomID}`);
+          } else {
+            setRoomState({
+              roomID,
+              players,
+              totalTeams,
+              duration,
+              status,
+              destroyRoomFlag,
+              playerID,
+              playerTeam,
+            });
+          }
+        }
       }
     );
 
-    socket.on("userError", (error) => {
+    socket.on(events.userError.name, (error) => {
       setError(error);
     });
 
-    //Acknowledgement Of Room Creation And Receive Room ID
-    socket.on("roomCreated", (roomID, playerId) => {
-      localStorage.setItem("playerID", playerId); //Set Player Id in local storage
-      nickname === null
-        ? setParams({ roomID })
-        : setParams({ roomID, name: nickname });
-    });
-
-    socket.on("roomDestroy", () => {
-      setError("Room Destroyed");
-      navigate("/");
-    });
-
-    // Redirecting to new page once game has started
-    socket.on("gameStarted", () => {
-      const updatedParams = new URLSearchParams(window.location.search);
-      const updatedRoomID = updatedParams.get("roomID");
-      navigate(`/ongoing?roomID=${updatedRoomID}`);
-    });
     return () => {
-      socket.off("preGameUpdate");
-      socket.off("roomCreated");
-      socket.off("roomDestroy");
-      socket.off("gameStarted");
+      socket.off(events.roomStateAcknowledgement.name);
+      socket.off(events.userError.name);
     };
-  }, [socket]);
+  }, [isFirstLoad]);
 
   // Copying Link To Clipboard
   function copyLinkToClipboard() {
-    if (!roomID) return;
-    navigator.clipboard.writeText(`http://localhost:5173?roomID=${roomID}`);
+    if (!roomState.roomID) return;
+    navigator.clipboard.writeText(
+      `http://localhost:5173?roomID=${roomState.roomID}`
+    );
     setCopyLink(true);
     setTimeout(() => setCopyLink(false), 1000);
-  }
-
-  // Function to start game
-  function startGame() {
-    const playerID = localStorage.getItem("playerID");
-
-    socket.emit("newGameStarted", playerID, roomID);
   }
 
   return (
@@ -132,7 +135,7 @@ const CreateRoomPage = () => {
         <p className="text-2xl text-blue-950 font-medium">{`Room Hosted By ${nickname}`}</p>
         <button
           className="text-white text-sm bg-blue-950 px-3 py-1.5 rounded cursor-pointer flex items-center justify-center w-40"
-          onClick={() => emitterRoomDestroy(roomID)}
+          onClick={() => emitterRoomDestroy(roomState.roomID)}
         >
           Close
         </button>
@@ -144,7 +147,7 @@ const CreateRoomPage = () => {
               Invite others using the following link :
             </p>
             <p className="text-blue-950 text-sm tracking-wide mt-2">
-              {`http://localhost:5173?roomID=${roomID}`}
+              {`http://localhost:5173?roomID=${roomState.roomID}`}
             </p>
           </div>
           <button
@@ -173,10 +176,13 @@ const CreateRoomPage = () => {
                       : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
                   }
                   onClick={() =>
-                    emitterUpdateTurnDuration(
+                    socket.emit(
+                      events.preGameUpdateRoom.name,
+                      roomState.roomID,
                       120000,
-                      roomID,
-                      roomState.totalTeams
+                      roomState.totalTeams,
+                      roomState.playerID,
+                      roomState.playerTeam
                     )
                   }
                 >
@@ -189,10 +195,13 @@ const CreateRoomPage = () => {
                       : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
                   }
                   onClick={() =>
-                    emitterUpdateTurnDuration(
+                    socket.emit(
+                      events.preGameUpdateRoom.name,
+                      roomState.roomID,
                       300000,
-                      roomID,
-                      roomState.totalTeams
+                      roomState.totalTeams,
+                      roomState.playerID,
+                      roomState.playerTeam
                     )
                   }
                 >
@@ -213,7 +222,14 @@ const CreateRoomPage = () => {
                       : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
                   }
                   onClick={() =>
-                    emitterUpdateTotalTeams(roomState.duration, roomID, 2)
+                    socket.emit(
+                      events.preGameUpdateRoom.name,
+                      roomState.roomID,
+                      roomState.duration,
+                      2,
+                      roomState.playerID,
+                      roomState.playerTeam
+                    )
                   }
                 >
                   2 Teams
@@ -225,7 +241,14 @@ const CreateRoomPage = () => {
                       : "w-30 py-1.5 rounded text-sm text-blue-950 border-blue-950 border cursor-pointer"
                   }
                   onClick={() =>
-                    emitterUpdateTotalTeams(roomState.duration, roomID, 3)
+                    socket.emit(
+                      events.preGameUpdateRoom.name,
+                      roomState.roomID,
+                      roomState.duration,
+                      3,
+                      roomState.playerID,
+                      roomState.playerTeam
+                    )
                   }
                 >
                   3 Teams
@@ -242,7 +265,16 @@ const CreateRoomPage = () => {
           <div className="w-full flex flex-col flex-1">
             <button
               className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
-              onClick={() => emitterUpdatePlayerTeam(roomID, "A")}
+              onClick={() =>
+                socket.emit(
+                  events.preGameUpdateRoom.name,
+                  roomState.roomID,
+                  roomState.duration,
+                  roomState.totalTeams,
+                  roomState.playerID,
+                  "A"
+                )
+              }
             >
               Switch To Team A
             </button>
@@ -264,7 +296,16 @@ const CreateRoomPage = () => {
           <div className="w-full flex flex-col flex-1">
             <button
               className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
-              onClick={() => emitterUpdatePlayerTeam(roomID, "B")}
+              onClick={() =>
+                socket.emit(
+                  events.preGameUpdateRoom.name,
+                  roomState.roomID,
+                  roomState.duration,
+                  roomState.totalTeams,
+                  roomState.playerID,
+                  "B"
+                )
+              }
             >
               Switch To Team B
             </button>
@@ -287,7 +328,16 @@ const CreateRoomPage = () => {
             <div className="w-full flex flex-col flex-1">
               <button
                 className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
-                onClick={() => emitterUpdatePlayerTeam(roomID, "C")}
+                onClick={() =>
+                  socket.emit(
+                    events.preGameUpdateRoom.name,
+                    roomState.roomID,
+                    roomState.duration,
+                    roomState.totalTeams,
+                    roomState.playerID,
+                    "C"
+                  )
+                }
               >
                 Switch To Team C
               </button>
@@ -311,7 +361,13 @@ const CreateRoomPage = () => {
       </div>
       <div className="mt-6 flex justify-center">
         <button
-          onClick={startGame}
+          onClick={() =>
+            socket.emit(
+              events.gameStart.name,
+              roomState.playerID,
+              roomState.roomID
+            )
+          }
           className="flex outline-none border-none px-3 py-2 tracking-wide text-white font-medium rounded-md bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400"
         >
           START GAME

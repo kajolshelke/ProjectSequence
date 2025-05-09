@@ -34,14 +34,30 @@ interface Props {
   suit: "Heart" | "Club" | "Spade" | "Diamond" | "Joker";
   enabled: boolean;
   team: "A" | "B" | "C" | null;
+  sequenceCard: boolean;
+  highlightMoveCard: boolean;
 }
 
-const PlayingCard = ({ rank, suit, enabled, team }: Props) => {
+const PlayingCard = ({
+  rank,
+  suit,
+  enabled,
+  team,
+  sequenceCard,
+  highlightMoveCard,
+}: Props) => {
   const Icon = suits[suit];
 
   return (
     <div
-      className={`w-full h-full shadow-boardcard bg-white ${
+      className={`w-full h-full shadow-boardcard 
+        ${
+          sequenceCard
+            ? "bg-gray-300"
+            : highlightMoveCard
+            ? "animate-flash"
+            : "bg-white"
+        }  ${
         enabled ? "border-2 border-blue-800" : "border border-white"
       } rounded flex flex-col justify-between px-2 py-0.5  ${
         (suit === "Heart" || suit === "Diamond") && "text-red-500"

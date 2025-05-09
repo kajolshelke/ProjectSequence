@@ -4,6 +4,8 @@ import { Room } from "../types/types.js";
 import z from "zod";
 import { playerValidationSchema,roomIDValidationSchema } from "../validation/validationSchema.js";
 import preGameBroadcastController from "./preGameBroadcast.js";
+import { io } from "../server/index.js";
+import { events } from "../events/events.js";
 
 
 export default async function joinRoomController(socket:Socket, nickname : string,roomID:string) {
@@ -120,9 +122,8 @@ export default async function joinRoomController(socket:Socket, nickname : strin
         // ------------ Notifying the updated roomstate of players --------- //
         // ---------- Updating the front end with pre game/lobby changes --------- //
 
-        preGameBroadcastController(roomID,data.players, data.totalTeams, data.duration)
-
-        socket.emit("playerJoinRoom",id)
+        io.to(roomID).emit(events.roomStateAcknowledgement.name,roomID,data.players,data.totalTeams,data.duration,data.status,false)
+        
         
             
     } catch (error:any) {

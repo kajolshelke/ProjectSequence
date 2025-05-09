@@ -3,9 +3,11 @@ import { v4 } from "uuid";
 import db from "../db/redisConfig.js";
 import { Player,Room } from "../types/types.js";
 import { playerValidationSchema } from "../validation/validationSchema.js";
+import { io } from "../server/index.js";
+import { events } from "../events/events.js";
 
 export default async function createRoomController(socket:Socket,nickname:string){
-
+console.log(nickname)
     try {
         
     // ------------------- Validation of host input for room creation ---------------------- //
@@ -62,7 +64,7 @@ export default async function createRoomController(socket:Socket,nickname:string
 
     // --------------- Notifying room has been set & host has joined the room ------------- //
 
-    socket.emit("roomCreated",roomID,playerId);
+    io.to(roomID).emit(events.roomStateAcknowledgement.name,roomID,room.players,room.totalTeams,room.duration,room.status,false)
 
 
     } catch (error:any) {

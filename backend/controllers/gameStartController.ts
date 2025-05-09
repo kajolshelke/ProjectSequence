@@ -6,6 +6,7 @@ import deck from "../game logic/cardDeck.js";
 import { Socket } from "socket.io";
 import { io } from "../server/index.js";
 import { boardState } from "../game logic/initialBoardState.js";
+import { events } from "../events/events.js";
 
 
 function shuffleDeck(deck:{rank:number,suit:"Club"|"Heart"|"Diamond"|"Spade"}[]){
@@ -146,14 +147,14 @@ export async function gameStartController(socket:Socket,playerID:string,roomID:s
 
 
       
-          io.to(roomID).emit("gameStarted");
+          io.to(roomID).emit(events.roomStateAcknowledgement.name,roomID,data.players,data.totalTeams,data.duration,data.status,false)
+          
 
           
 
     
   } catch (error:any) {
      // ---- Notifying error ----- //
-    console.log(error)
      socket.emit("userError",error.message)
   }
     

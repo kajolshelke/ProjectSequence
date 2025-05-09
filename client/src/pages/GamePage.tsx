@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import socket from "../socket/socket";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import PlayerPanel from "../components/PlayerPanel";
 import { boardPattern } from "../gameBoardPattern/boardPattern.js";
 import emitterRoomDestroy from "../controllers/emitters/emitterRoomDestroy.js";
+import { events } from "../events/events.js";
+import WinState from "../components/WinState.js";
+import PlayChipSound from "../components/PlayChipSound.js";
 
 interface boardPatternProp {
   rank: number;
@@ -32,6 +35,15 @@ const GamePage = () => {
   const [formedSequenceList, setFormedSequenceList] = useState<
     sequenceListProp[][]
   >([]);
+  const [playerTeam, setPlayerTeam] = useState<"A" | "B" | "C">("A");
+  const [winState, setWinState] = useState<null | "A" | "B" | "C" | "TIE">(
+    null
+  );
+  const [moveCardOnBoard, setMoveCardOnBoard] = useState<{
+    rank: number;
+    suit: "Heart" | "Spade" | "Club" | "Diamond" | "Joker";
+    deck: 0 | 1 | null;
+  } | null>();
 
   useEffect(() => {
     const isReloaded = sessionStorage.getItem("game-page-reload");
@@ -43,32 +55,34 @@ const GamePage = () => {
     } else {
       // runs on initial load of page
       sessionStorage.setItem("game-page-reload", "true");
-      socket.emit("playerHand", playerID, roomID);
+      socket.emit(events.playerFirstHand.name, playerID, roomID);
     }
   }, []);
 
   useEffect(() => {
     socket.on(
-      "playerHandFirstUpdate",
+      events.playerFirstHand.name,
       (
-        playerHand,
+        firstPlayerName,
+        firstPlayerTeam,
+        firstPlayerID,
+        handState,
+        playerTeam,
         drawDeckLength,
-        firstPLayerTurnName,
-        firstPLayerTurnTeam,
-        duration,
-        firstPLayerTurnID
+        duration
       ) => {
-        setHand(playerHand);
+        setHand(handState);
         setNoOfCardsLeftInDrawDeck(drawDeckLength);
-        setNextPlayerName(firstPLayerTurnName);
-        setNextPlayerTeam(firstPLayerTurnTeam);
+        setNextPlayerName(firstPlayerName);
+        setNextPlayerTeam(firstPlayerTeam);
         setPlayerTimeRemaining(duration);
-        setNextPlayerID(firstPLayerTurnID);
+        setNextPlayerID(firstPlayerID);
+        setPlayerTeam(playerTeam);
       }
     );
 
     socket.on(
-      "gameStateUpdate",
+      events.playerMove.name,
       (
         newBoardState: boardPatternProp[],
         sequenceList: sequenceListProp[][],
@@ -76,7 +90,13 @@ const GamePage = () => {
         nextPlayerName: string,
         nextPlayerTeam: string,
         drawDeckLength: number,
-        duration: number
+        duration: number,
+        winState: null | "A" | "B" | "C" | "TIE",
+        moveCardOnBoard: {
+          rank: number;
+          suit: "Heart" | "Spade" | "Club" | "Diamond" | "Joker";
+          deck: 0 | 1 | null;
+        } | null
       ) => {
         setBoardState(newBoardState);
         setFormedSequenceList(sequenceList);
@@ -86,17 +106,22 @@ const GamePage = () => {
         setNoOfCardsLeftInDrawDeck(drawDeckLength);
         setNextPlayerID(nextPlayerID);
         setPlayerTimeRemaining(duration);
+        setWinState(winState);
+        setMoveCardOnBoard(moveCardOnBoard);
+        if (moveCardOnBoard !== null) {
+          PlayChipSound();
+        }
       }
     );
 
-    socket.on("playerHandUpdate", (playerHandAfterMove) => {
+    socket.on(events.playerHandUpdate.name, (playerHandAfterMove) => {
       setHand(playerHandAfterMove);
     });
 
     return () => {
-      socket.off("playerHandFirstUpdate");
-      socket.off("gameStateUpdate");
-      socket.off("playerHandUpdate");
+      socket.off(events.playerFirstHand.name);
+      socket.off(events.playerMove.name);
+      socket.off(events.playerHandUpdate.name);
     };
   }, [socket]);
 
@@ -108,17 +133,35 @@ const GamePage = () => {
     useState<number>(104);
 
   const [playerTimeRemaining, setPlayerTimeRemaining] = useState<number>(0);
+
+  const timerTickingSoundRef = useRef<HTMLAudioElement | null>(null);
+  const timerEndSoundRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    timerTickingSoundRef.current = new Audio("/sounds/timerTickingSound.mp3");
+    timerTickingSoundRef.current.volume = 0.3;
+
+    timerEndSoundRef.current = new Audio("/sounds/timerEndSound.mp3");
+    timerEndSoundRef.current.volume = 0.6;
+  }, []);
   useEffect(() => {
     let timer = -1;
-    if (nextPlayerID === playerID) {
-      timer = setInterval(() => {
-        if (playerTimeRemaining > 1000) {
-          setPlayerTimeRemaining(playerTimeRemaining - 1000);
-        } else {
-          clearInterval(timer);
-          socket.emit("playerMadeMove", playerID, roomID, null, null);
-        }
-      }, 1000);
+    if (winState !== null) {
+      if (timer !== -1) {
+        clearInterval(timer);
+      }
+    } else {
+      if (nextPlayerID === playerID) {
+        timer = setInterval(() => {
+          if (playerTimeRemaining > 1000) {
+            timerTickingSoundRef.current?.play();
+            setPlayerTimeRemaining(playerTimeRemaining - 1000);
+          } else {
+            timerEndSoundRef.current?.play();
+            clearInterval(timer);
+            socket.emit(events.playerMove.name, playerID, roomID, null, null);
+          }
+        }, 1000);
+      }
     }
 
     return () => {
@@ -133,10 +176,13 @@ const GamePage = () => {
           selectedCardFromHand={selectedCardFromHand}
           boardPattern={boardState}
           formedSequenceList={formedSequenceList}
+          playerTeam={playerTeam}
+          moveCardOnBoard={moveCardOnBoard!}
         />
       </div>
       <div className="w-[25%] flex flex-col items-center justify-center p-2">
         <PlayerPanel
+          selectedCardFromHand={selectedCardFromHand}
           setSelectedCardFromHand={setSelectedCardFromHand}
           hand={hand}
           nextPlayerName={nextPlayerName}
@@ -145,6 +191,7 @@ const GamePage = () => {
           playerTimeRemaining={playerTimeRemaining}
         />
       </div>
+      {winState && <WinState winState={winState} />}
     </div>
   );
 };

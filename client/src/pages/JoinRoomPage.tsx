@@ -3,10 +3,11 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import socket from "../socket/socket";
 import { Player } from "../types/types";
 import { FaCog, FaCopy } from "react-icons/fa";
-import emitterUpdatePlayerTeam from "../controllers/emitters/emitterUpdatePlayerTeam";
 import emitterJoinRoom from "../controllers/emitters/emitterJoinRoom";
 import emitterLeaveRoom from "../controllers/emitters/emitterLeaveRoom";
 import { GlobalErrorContext } from "../contexts/ErrorContext";
+import useFirstLoad from "../customHooks/useFirstLoad";
+import { events } from "../events/events";
 
 const JoinRoomPage = () => {
   //Get url params for name
@@ -19,10 +20,16 @@ const JoinRoomPage = () => {
 
   //Room State
   const [roomState, setRoomState] = useState<{
+    roomID: string;
     players: Player[];
     totalTeams: number;
     duration: number;
+    status: boolean;
+    destroyRoomFlag: boolean;
+    playerID: string;
+    playerTeam: "A" | "B" | "C";
   }>({
+    roomID: "",
     players: [
       {
         name: nickname ? nickname : "",
@@ -35,6 +42,10 @@ const JoinRoomPage = () => {
     ],
     totalTeams: 2,
     duration: 120000,
+    status: false,
+    destroyRoomFlag: false,
+    playerID: "",
+    playerTeam: "A",
   });
 
   //Navigator
@@ -43,69 +54,72 @@ const JoinRoomPage = () => {
   //Subsidiary States
   const [copyLink, setCopyLink] = useState(false);
 
-  //Create Room Upon Page Load
-  useEffect(() => {
-    if (nickname !== null && roomID !== null) {
-      emitterJoinRoom(nickname, roomID);
-    }
-  }, [nickname]);
-
-  useEffect(() => {
-    const isReloaded = sessionStorage.getItem("join-room-reload");
-
-    if (isReloaded) {
-      emitterLeaveRoom(roomID ? roomID : "", nickname ? nickname : "");
-      navigate("/");
-    }
-
-    sessionStorage.setItem("join-room-reload", "t");
-  }, []);
+  const isFirstLoad = useFirstLoad("join-room-reload");
 
   //Listen To Room Updates
   useEffect(() => {
+    if (isFirstLoad !== null) {
+      if (isFirstLoad) {
+        if (nickname !== null && roomID !== null) {
+          emitterJoinRoom(nickname, roomID);
+        }
+      } else {
+        const playerID = localStorage.getItem("playerID");
+        emitterLeaveRoom(roomID ? roomID : "", playerID ? playerID : "");
+        navigate("/");
+      }
+    }
+
     //Update On Room Configuration
     socket.on(
-      "preGameUpdate",
-      (players: Player[], totalTeams: number, duration: number) => {
-        setRoomState({
-          players,
-          totalTeams,
-          duration,
-        });
+      events.roomStateAcknowledgement.name,
+      (
+        roomID,
+        players: Player[],
+        totalTeams: number,
+        duration: number,
+        status: boolean,
+        destroyRoomFlag: boolean
+      ) => {
+        if (destroyRoomFlag) {
+          setError("Room Destroyed");
+          navigate("/");
+        } else {
+          localStorage.setItem(
+            "playerID",
+            players.filter((x) => x.name === nickname)[0].id
+          );
+
+          const playerID = players.filter((x) => x.name === nickname)[0].id;
+          const playerTeam = players.filter((x) => x.name === nickname)[0].team;
+
+          if (status) {
+            navigate(`/ongoing?roomID=${roomID}`);
+          } else {
+            setRoomState({
+              roomID,
+              players,
+              totalTeams,
+              duration,
+              status,
+              destroyRoomFlag,
+              playerID,
+              playerTeam,
+            });
+          }
+        }
       }
     );
 
-    socket.on("playerJoinRoom", (id: number) => {
-      localStorage.setItem("playerID", id.toString());
-    });
-
-    socket.on("userError", (error) => {
+    socket.on(events.userError.name, (error) => {
       setError(error);
     });
 
-    socket.on("leaveRoom", () => {
-      navigate("/");
-      setError("Room Left");
-    });
-
-    socket.on("roomDestroy", () => {
-      navigate("/");
-      setError("Room Destroyed");
-    });
-
-    // Redirecting to new page once game has started
-    socket.on("gameStarted", () => {
-      navigate(`/ongoing?roomID=${roomID}`);
-    });
-
     return () => {
-      socket.off("preGameUpdate");
-      socket.off("userError");
-      socket.off("leaveRoom");
-      socket.off("roomDestroy");
-      socket.off("gameStarted");
+      socket.off(events.roomStateAcknowledgement.name);
+      socket.off(events.userError.name);
     };
-  }, [socket]);
+  }, [isFirstLoad]);
 
   // Copying Link To Clipboard
   function copyLinkToClipboard() {
@@ -127,7 +141,10 @@ const JoinRoomPage = () => {
         <button
           className="text-white text-sm bg-blue-950 px-3 py-1.5 rounded cursor-pointer flex items-center justify-center w-40"
           onClick={() =>
-            emitterLeaveRoom(roomID ? roomID : "", nickname ? nickname : "")
+            emitterLeaveRoom(
+              roomID ? roomID : "",
+              roomState.playerID ? roomState.playerID : ""
+            )
           }
         >
           Back
@@ -217,7 +234,16 @@ const JoinRoomPage = () => {
           <div className="w-full flex flex-col flex-1">
             <button
               className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
-              onClick={() => emitterUpdatePlayerTeam(roomID ? roomID : "", "A")}
+              onClick={() =>
+                socket.emit(
+                  events.preGameUpdateRoom.name,
+                  roomState.roomID,
+                  roomState.duration,
+                  roomState.totalTeams,
+                  roomState.playerID,
+                  "A"
+                )
+              }
             >
               Switch To Team A
             </button>
@@ -239,7 +265,16 @@ const JoinRoomPage = () => {
           <div className="w-full flex flex-col flex-1">
             <button
               className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
-              onClick={() => emitterUpdatePlayerTeam(roomID ? roomID : "", "B")}
+              onClick={() =>
+                socket.emit(
+                  events.preGameUpdateRoom.name,
+                  roomState.roomID,
+                  roomState.duration,
+                  roomState.totalTeams,
+                  roomState.playerID,
+                  "B"
+                )
+              }
             >
               Switch To Team B
             </button>
@@ -263,7 +298,14 @@ const JoinRoomPage = () => {
               <button
                 className="flex mb-3 text-sm outline-none border-none px-5 py-1.5 tracking-wide text-white font-medium rounded bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400 w-fit"
                 onClick={() =>
-                  emitterUpdatePlayerTeam(roomID ? roomID : "", "C")
+                  socket.emit(
+                    events.preGameUpdateRoom.name,
+                    roomState.roomID,
+                    roomState.duration,
+                    roomState.totalTeams,
+                    roomState.playerID,
+                    "C"
+                  )
                 }
               >
                 Switch To Team C
