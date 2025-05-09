@@ -34,7 +34,9 @@ const HomePage = () => {
             className="outline-none border-none rounded-md px-4 py-2 text-blue-500 font-medium text-center bg-blue-50 shadow-lg w-full placeholder:text-blue-500"
             value={nickname}
             placeholder="Enter Your Nickname"
-            onChange={(e) => setNickname(e.target.value)}
+            onChange={(e) => {
+              setNickname(e.target.value);
+            }}
           />
           <p className="text-xs font-medium tracking-wide mt-5 text-blue-950">
             Nickname mustn't exceed 20 character or be less than 3 characters.

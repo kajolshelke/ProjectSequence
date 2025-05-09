@@ -1,17 +1,30 @@
 import { GlobalErrorContext } from "../contexts/ErrorContext";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { MdCancel } from "react-icons/md";
 import { FaExclamation } from "react-icons/fa";
+import PlayErrorSound from "./PlayErrorSound";
 
 const ErrorToast = () => {
   const { error, setError } = useContext(GlobalErrorContext);
 
+  useEffect(() => {
+    if (error.length > 0) {
+      PlayErrorSound();
+    }
+  }, [error]);
+
   return (
-    <div className="fixed bottom-28 right-0 w-[25%] h-[12%] bg-white  rounded-md mr-10 duration-300 shadow-md">
-      <div className="w-full bg-red-700 rounded-t-md px-2 py-1 flex items-center justify-between text-white font-semibold tracking-wide">
+    <div
+      className={
+        error.length !== 0
+          ? "fixed bottom-28 right-0 w-[25%] h-[12%] bg-white  rounded-md mr-10 duration-300 shadow-md"
+          : "fixed bottom-28 right-[-35em] w-[25%] h-[12%] bg-white  rounded-md mr-10 duration-300 shadow-md"
+      }
+    >
+      <div className="w-full bg-gradient-to-br from-red-700 to-red-500 rounded-t-md px-2 py-1 flex items-center justify-between text-white font-semibold tracking-wide">
         <p className="flex items-center text-lg">
-          <FaExclamation className="text-sm mr-1" />
           Error
+          <FaExclamation className="text-sm" />
         </p>
         <MdCancel
           className=" text-lg cursor-pointer text-white"

@@ -1,19 +1,15 @@
 import "./App.css";
-import { createBrowserRouter, Link, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
 import ErrorPage from "./pages/ErrorPage";
 import socket from "./socket/socket";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import CreateRoomPage from "./pages/CreateRoomPage";
 import JoinRoomPage from "./pages/JoinRoomPage";
-import ErrorToast from "./components/ErrorToast";
 import GlobalErrorProvider from "./contexts/ErrorContext";
-import GameBoard from "./components/GameBoard";
-import CardDeck from "./components/CardDeck";
-import HandCard from "./components/HandCard";
 import GamePage from "./pages/GamePage";
-import WinState from "./components/WinState";
+import ErrorToast from "./components/ErrorToast";
 
 const router = createBrowserRouter([
   {
@@ -55,6 +51,7 @@ function App() {
     <GlobalErrorProvider>
       <div className="w-[100vw] h-[100vh] font-montserrat bg-gray-300 overflow-hidden">
         <RouterProvider router={router} />
+        <ErrorToast />
       </div>
     </GlobalErrorProvider>
   );

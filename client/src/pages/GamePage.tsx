@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import socket from "../socket/socket";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
@@ -8,7 +8,7 @@ import emitterRoomDestroy from "../controllers/emitters/emitterRoomDestroy.js";
 import { events } from "../events/events.js";
 import WinState from "../components/WinState.js";
 import PlayChipSound from "../components/PlayChipSound.js";
-
+import { GlobalErrorContext } from "../contexts/ErrorContext.js";
 interface boardPatternProp {
   rank: number;
   suit: "Heart" | "Spade" | "Club" | "Diamond" | "Joker";
@@ -44,6 +44,8 @@ const GamePage = () => {
     suit: "Heart" | "Spade" | "Club" | "Diamond" | "Joker";
     deck: 0 | 1 | null;
   } | null>();
+
+  const { setError } = useContext(GlobalErrorContext);
 
   useEffect(() => {
     const isReloaded = sessionStorage.getItem("game-page-reload");
@@ -118,10 +120,15 @@ const GamePage = () => {
       setHand(playerHandAfterMove);
     });
 
+    socket.on(events.userError.name, (userError) => {
+      setError(userError);
+    });
+
     return () => {
       socket.off(events.playerFirstHand.name);
       socket.off(events.playerMove.name);
       socket.off(events.playerHandUpdate.name);
+      socket.off(events.userError.name);
     };
   }, [socket]);
 
