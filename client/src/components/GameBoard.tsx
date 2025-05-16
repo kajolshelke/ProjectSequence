@@ -2,7 +2,6 @@ import PlayingCard from "./PlayingCard";
 import socket from "../socket/socket";
 import { useSearchParams } from "react-router-dom";
 import { events } from "../events/events";
-import PlayChipSound from "./PlayChipSound";
 
 const GameBoard = ({
   selectedCardFromHand,
@@ -189,7 +188,7 @@ const GameBoard = ({
     }
   }
   return (
-    <div className="h-full bg-blue-950/10 flex-1 rounded-sm p-2 grid grid-cols-10 grid-rows-10 gap-2 shadow-gameboard">
+    <div className="h-full bg-blue-950/30 flex-1 rounded-sm p-2 grid grid-cols-10 grid-rows-10 gap-2 shadow-gameboard">
       {boardPattern.map((card, index) => {
         const { rank, suit } = card;
         return (

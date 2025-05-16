@@ -14,6 +14,7 @@ import { events } from "../events/events.js";
 import leaveRoomController from "../controllers/leaveRoomController.js";
 import lobbySettingsUpdateController from "../controllers/lobbySettingsUpdateController.js";
 import deadCardController from "../controllers/deadCardController.js";
+import postGameLeaveRoomController from "../controllers/postGameLeaveRoomController.js";
 
 //Initial Configuration 
 dotenv.config()
@@ -25,6 +26,7 @@ const server  = createServer(app);
 
 //Server Config
 export const io = new Server (server,{
+    path:"/ws",
     cors:{
         origin:"*",
         methods:["GET","POST"]
@@ -68,6 +70,10 @@ io.on("connection",(socket)=>{
 
     socket.on(events.preGameLeaveRoom.name, (roomID,playerID) => {
         leaveRoomController(socket,roomID,playerID)
+    })
+
+    socket.on(events.postGameLeaveRoom.name,async(roomID,playerID)=>{
+        await postGameLeaveRoomController(socket,roomID,playerID)
     })
 
     socket.on("disconnect",()=>{

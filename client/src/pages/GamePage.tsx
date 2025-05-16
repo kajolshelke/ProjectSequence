@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import GameBoard from "../components/GameBoard";
 import PlayerPanel from "../components/PlayerPanel";
 import { boardPattern } from "../gameBoardPattern/boardPattern.js";
-import emitterRoomDestroy from "../controllers/emitters/emitterRoomDestroy.js";
 import { events } from "../events/events.js";
 import WinState from "../components/WinState.js";
 import PlayChipSound from "../components/PlayChipSound.js";
@@ -52,7 +51,8 @@ const GamePage = () => {
 
     if (isReloaded) {
       // runs on refresh of page
-      emitterRoomDestroy(roomID);
+      socket.emit(events.postGameLeaveRoom.name, roomID, playerID);
+      setError("Room destroyed");
       navigate("/");
     } else {
       // runs on initial load of page
@@ -62,6 +62,10 @@ const GamePage = () => {
   }, []);
 
   useEffect(() => {
+    socket.on(events.postGameLeaveRoom.name, () => {
+      setError("Room destroyed");
+      navigate("/");
+    });
     socket.on(
       events.playerFirstHand.name,
       (

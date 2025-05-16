@@ -54,6 +54,7 @@ function App() {
         <ErrorToast />
       </div>
     </GlobalErrorProvider>
+    // <Rules />
   );
 }
 

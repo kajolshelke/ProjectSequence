@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { events } from "../events/events";
 import socket from "../socket/socket";
 import HandCard from "./HandCard";
@@ -42,43 +42,44 @@ const PlayerPanel = ({
   const playerID = localStorage.getItem("playerID");
   const [params, _] = useSearchParams();
   const roomID = params.get("roomID");
+  const navigate = useNavigate();
 
   return (
-    <div className=" bg-gradient-to-b from-blue-950 to-blue-900 w-full rounded-md px-3 py-4 flex-1 flex flex-col justify-between">
-      <div>
-        <div className="flex justify-between mb-4  bg-gray-300/20 px-2 py-1 rounded-sm  text-blue-50">
-          <div>Time remaining</div>
-          <div>{formatTime(playerTimeRemaining)}</div>
-        </div>
+    <div className=" bg-gradient-to-b from-blue-950 to-blue-900 w-full rounded-md px-3 py-4 flex-1 gap-3 flex flex-col">
+      <div className="flex justify-between   bg-gray-300/20 px-2 py-1 rounded-sm  text-blue-50">
+        <div>Time remaining</div>
+        <div>{formatTime(playerTimeRemaining)}</div>
+      </div>
 
-        <div className="bg-gray-300/20 mb-4 px-2 py-2 pb-3 rounded-sm ">
-          <p className=" text-blue-50 text-center mb-1">Current turn</p>
-          <div className="flex flex-col justify-between gap-3 text-center text-white">
-            <div className="flex gap-3 items-center justify-center w-full bg-black/40 px-2 py-1 rounded-sm">
-              <p>Team : {nextPlayerTeam}</p>
-              <div
-                className={`w-4 h-4 rounded-full ${
-                  nextPlayerTeam === "A"
-                    ? "bg-orange-500"
-                    : nextPlayerTeam === "B"
-                    ? "bg-blue-600"
-                    : nextPlayerTeam === "C"
-                    ? "bg-green-600"
-                    : ""
-                }  `}
-              ></div>
-            </div>
-            <p className="w-full  bg-black/40 px-2 py-1 rounded-sm">
-              Player : {nextPlayerName}
-            </p>
+      <div className="bg-gray-300/20  px-2 py-2 pb-3 rounded-sm ">
+        <p className=" text-blue-50 text-center mb-1">Current turn</p>
+        <div className="flex flex-col justify-between gap-3 text-center text-white">
+          <div className="flex gap-3 items-center justify-center w-full bg-black/40 px-2 py-1 rounded-sm">
+            <p>Team : {nextPlayerTeam}</p>
+            <div
+              className={`w-4 h-4 rounded-full ${
+                nextPlayerTeam === "A"
+                  ? "bg-gradient-to-b from-orange-600 to-orange-400"
+                  : nextPlayerTeam === "B"
+                  ? "bg-gradient-to-b from-blue-700 to-blue-500"
+                  : nextPlayerTeam === "C"
+                  ? "bg-gradient-to-b from-green-700 to-green-500"
+                  : ""
+              }  `}
+            ></div>
           </div>
+          <p className="w-full  bg-black/40 px-2 py-1 rounded-sm">
+            Player : {nextPlayerName}
+          </p>
         </div>
+      </div>
 
-        <div className="bg-gray-300/20 mb-1 px-2 py-3 rounded-sm ">
-          <p className="text-center text-white mb-4 bg-black/40 p-1 rounded-sm">
+      <div className="bg-gray-300/20  px-2 py-3 rounded-sm flex-1 flex flex-col justify-between">
+        <div className="flex flex-col ">
+          <p className="text-center text-white max-[1600px]:mb-2 max-[3000px]:mb-4 bg-black/40 p-1 rounded-sm">
             Player's Hand
           </p>
-          <div className="flex flex-wrap gap-6 items-center justify-center">
+          <div className="flex flex-wrap max-[1600px]:gap-3 max-[3000px]:gap-4 items-center justify-center">
             {hand.map((card, index) => (
               <div
                 className={`${
@@ -87,7 +88,7 @@ const PlayerPanel = ({
                     ? "rounded-md border-2 border-orange-500"
                     : ""
                 }
-                         p-[0.1rem] w-16 h-24 min-w-12 min-h-20`}
+                         p-[0.1rem] `}
                 key={index}
                 onClick={() => {
                   setSelectedCardFromHand({ rank: card.rank, suit: card.suit });
@@ -98,25 +99,25 @@ const PlayerPanel = ({
               </div>
             ))}
           </div>
-          <button
-            className={`mt-2 text-sm w-full bg-gradient-to-br from-gray-900 to-gray-600 rounded-md
-                             text-white px-1 py-0.5 tracking-wide cursor-pointer hover:bg-gradient-to-br
-                             hover:from-gray-800 hover:to-gray-600`}
-            onClick={() =>
-              socket.emit(
-                events.deadCard.name,
-                playerID,
-                roomID,
-                selectedCardFromHand
-              )
-            }
-          >
-            Add card to discard pile
-          </button>
         </div>
+        <button
+          className={` text-sm w-full bg-gradient-to-br from-blue-800 to-blue-500 rounded-md font-medium
+                             text-white px-1 max-[1600px]:py-1 max-[3000px]:py-2 tracking-wide cursor-pointer hover:bg-gradient-to-br
+                             hover:from-blue-700 hover:to-blue-400`}
+          onClick={() =>
+            socket.emit(
+              events.deadCard.name,
+              playerID,
+              roomID,
+              selectedCardFromHand
+            )
+          }
+        >
+          Add card to discard pile
+        </button>
       </div>
 
-      <div className="text-white text-sm text-center px-2 py-0.5 mb-2 bg-gray-300/20 rounded-sm">
+      <div className="text-white text-sm text-center px-2 py-2  bg-gray-300/20 rounded-sm">
         Cards remaining in deck : {noOfCardsLeftInDrawDeck}
       </div>
       <div>
@@ -132,6 +133,10 @@ const PlayerPanel = ({
           className={`w-full  outline-none border-none px-3 py-2 tracking-wide text-white font-medium rounded-md
                       bg-gradient-to-br from-red-700 to-red-500 cursor-pointer
                       hover:bg-gradient-to-br hover:from-red-600 hover:to-red-500`}
+          onClick={() => {
+            socket.emit(events.postGameLeaveRoom.name, roomID, playerID);
+            navigate("/");
+          }}
         >
           Leave Room
         </button>

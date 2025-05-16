@@ -6,9 +6,14 @@ import db from "../db/redisConfig.js";
 import { events } from "../events/events.js";
 
 export default async function deadCardController(socket:Socket,playerID:string,roomID:string,selectedCardFromHand:SelectedCardFromHand) {
-    console.log(playerID,roomID,selectedCardFromHand)
+    
+
 
     try {
+
+        if(selectedCardFromHand === null){
+            throw new Error("Invalid move")
+        }
         const selectedCardFromHandValidation = z.object({
                     rank: cardValidationSchema.shape.rank,
                     suit:cardValidationSchema.shape.suit

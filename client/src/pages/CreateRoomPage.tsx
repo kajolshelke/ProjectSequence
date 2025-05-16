@@ -14,6 +14,7 @@ const CreateRoomPage = () => {
   //Get url params for name
   const [params, setParams] = useSearchParams();
   const nickname = params.get("name");
+  const roomID = params.get("roomID");
 
   //Error Context
   const { setError } = useContext(GlobalErrorContext);
@@ -63,7 +64,7 @@ const CreateRoomPage = () => {
           emitterCreateRoom(nickname);
         }
       } else {
-        emitterRoomDestroy(roomState.roomID);
+        emitterRoomDestroy(roomID);
         navigate("/");
       }
     }
@@ -123,19 +124,22 @@ const CreateRoomPage = () => {
   function copyLinkToClipboard() {
     if (!roomState.roomID) return;
     navigator.clipboard.writeText(
-      `http://localhost:5173?roomID=${roomState.roomID}`
+      `http://sequencess.com?roomID=${roomState.roomID}`
     );
     setCopyLink(true);
     setTimeout(() => setCopyLink(false), 1000);
   }
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-gradient-to-b to-red-50 from-blue-300 p-5">
+    <div className="w-screen h-screen flex flex-col bg-gradient-to-b to-red-50 from-blue-300 p-5 pb-3">
       <div className="flex items-center justify-between pb-5 border-b border-b-blue-950">
         <p className="text-2xl text-blue-950 font-medium">{`Room Hosted By ${nickname}`}</p>
         <button
           className="text-white text-sm bg-blue-950 px-3 py-1.5 rounded cursor-pointer flex items-center justify-center w-40"
-          onClick={() => emitterRoomDestroy(roomState.roomID)}
+          onClick={() => {
+            emitterRoomDestroy(roomState.roomID);
+            navigate("/");
+          }}
         >
           Close
         </button>
@@ -147,7 +151,7 @@ const CreateRoomPage = () => {
               Invite others using the following link :
             </p>
             <p className="text-blue-950 text-sm tracking-wide mt-2">
-              {`http://localhost:5173?roomID=${roomState.roomID}`}
+              {`http://sequencess.com?roomID=${roomState.roomID}`}
             </p>
           </div>
           <button
@@ -159,10 +163,10 @@ const CreateRoomPage = () => {
           </button>
         </div>
         <div className="mt-8">
-          <div className="font-medium text-lg mt-4 text-blue-950 flex items-center">
+          <div className="font-medium text-lg mt-2 text-blue-950 flex items-center">
             Configure Game Settings <FaCog className="ml-2" />
           </div>
-          <div className="mb-4 mt-4 flex gap-10">
+          <div className="mb-2 mt-1 flex gap-10">
             <div className="pb-5">
               <p className="mt-3 font-medium text-blue-950">Turn Duration</p>
               <p className="font-medium text-blue-950 text-xs tracking-wide">
@@ -284,9 +288,9 @@ const CreateRoomPage = () => {
                 .map((x, i) => (
                   <div
                     key={i}
-                    className="h-1/6 p-2 flex items-stretch justify-center"
+                    className="h-1/6 p-1 flex items-stretch justify-center"
                   >
-                    <p className="text-blue-950 font-medium tracking-wide bg-white w-full flex items-center justify-center rounded">
+                    <p className="text-blue-950 font-medium text-sm tracking-wide bg-white w-full flex items-center justify-center rounded">
                       {x.name}
                     </p>
                   </div>
@@ -315,9 +319,9 @@ const CreateRoomPage = () => {
                 .map((x, i) => (
                   <div
                     key={i}
-                    className="h-1/6 p-2 flex items-stretch justify-center"
+                    className="h-1/6 p-1 flex items-stretch justify-center"
                   >
-                    <p className="text-blue-950 font-medium tracking-wide bg-white w-full flex items-center justify-center rounded">
+                    <p className="text-blue-950  text-sm font-medium tracking-wide bg-white w-full flex items-center justify-center rounded">
                       {x.name}
                     </p>
                   </div>
@@ -347,9 +351,9 @@ const CreateRoomPage = () => {
                   .map((x, i) => (
                     <div
                       key={i}
-                      className="h-1/6 p-2 flex items-stretch justify-center"
+                      className="h-1/6 p-1 flex items-stretch justify-center"
                     >
-                      <p className="text-blue-950 font-medium tracking-wide bg-white w-full flex items-center justify-center rounded">
+                      <p className="text-blue-950  text-sm font-medium tracking-wide bg-white w-full flex items-center justify-center rounded">
                         {x.name}
                       </p>
                     </div>
@@ -359,7 +363,7 @@ const CreateRoomPage = () => {
           )}
         </div>
       </div>
-      <div className="mt-6 flex justify-center">
+      <div className="mt-3 flex justify-center">
         <button
           onClick={() =>
             socket.emit(

@@ -58,17 +58,19 @@ const HomePage = () => {
                 Create Room
               </Link>
             )}
-            <Link
-              to={
-                nickname.length >= 3 && nickname.length <= 20
-                  ? `/join?name=${nickname}&roomID=${roomIDFromURL}`
-                  : `#`
-              }
-              className="py-1.5 outline-none font-medium rounded-md transition-all flex-1 bg-gradient-to-br from-blue-900 to-blue-500 cursor-pointer hover:bg-gradient-to-br hover:from-blue-800 hover:to-blue-400 flex items-center justify-center gap-1 text-white"
-            >
-              <IoPeople className="text-lg relative right-2 " />
-              Join Room
-            </Link>
+            {roomIDFromURL && (
+              <Link
+                to={
+                  nickname.length >= 3 && nickname.length <= 20
+                    ? `/join?name=${nickname}&roomID=${roomIDFromURL}`
+                    : `#`
+                }
+                className="py-1.5 outline-none font-medium rounded-md transition-all flex-1 bg-gradient-to-br from-blue-900 to-blue-500 cursor-pointer hover:bg-gradient-to-br hover:from-blue-800 hover:to-blue-400 flex items-center justify-center gap-1 text-white"
+              >
+                <IoPeople className="text-lg relative right-2 " />
+                Join Room
+              </Link>
+            )}
           </div>
         </div>
         <div className=" text-center p-4 mt-10">

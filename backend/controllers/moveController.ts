@@ -30,6 +30,10 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
             throw new Error(validationResult.error.errors[0].message);
         }
 
+        if(selectedCardFromHand === null && moveCardOnBoard !== null){
+            throw new Error("Invalid move");
+        }
+
         
 
         const room = await db.get(roomID);
@@ -403,7 +407,7 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
                     if(data.teamBSequenceCount >= 1){
                         winState = "B"
                     }
-                    if(data.teamASequenceCount >= 1){
+                    if(data.teamCSequenceCount >= 1){
                         winState = "C";
                     }
                     

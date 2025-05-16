@@ -58,8 +58,8 @@ const PlayingCard = ({
             ? "animate-flash"
             : "bg-white"
         }  ${
-        enabled ? "border-2 border-blue-800" : "border border-white"
-      } rounded flex flex-col justify-between px-2 py-0.5  ${
+        enabled ? "border-[3px] border-red-600" : "border border-white"
+      } rounded flex flex-col justify-between px-2   ${
         (suit === "Heart" || suit === "Diamond") && "text-red-500"
       } ${suit === "Joker" && "text-blue-900"}`}
     >
@@ -72,11 +72,11 @@ const PlayingCard = ({
       <div className="flex-1 flex items-center justify-center">
         {team ? (
           team === "A" ? (
-            <div className="w-5 h-5 rounded-full bg-orange-500 absolute"></div>
+            <div className="w-5 h-5 rounded-full bg-gradient-to-b from-orange-600 to-orange-400  absolute"></div>
           ) : team === "B" ? (
-            <div className="w-5 h-5 rounded-full bg-blue-600 absolute"></div>
+            <div className="w-5 h-5 rounded-full bg-gradient-to-b from-blue-700 to-blue-400 absolute"></div>
           ) : team === "C" ? (
-            <div className="w-5 h-5 rounded-full bg-green-600 absolute"></div>
+            <div className="w-5 h-5 rounded-full bg-gradient-to-b from-green-700 to-green-500 absolute"></div>
           ) : (
             <></>
           )

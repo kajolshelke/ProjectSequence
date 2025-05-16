@@ -63,8 +63,8 @@ export default async function destroyRoomController(socket:Socket,roomID : strin
 
 
 
-     io.to(roomID).emit(events.roomStateAcknowledgement.name,roomID,data.players,data.totalTeams,data.duration,data.status,false)
-    
+     io.to(roomID).emit(events.roomStateAcknowledgement.name,roomID,data.players,data.totalTeams,data.duration,data.status,true)
+
     
 
     } catch (error:any) {
