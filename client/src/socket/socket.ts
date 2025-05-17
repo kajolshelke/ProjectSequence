@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 
-const socket : Socket = io("http://3.7.126.228",{
+const socket : Socket = io("https://sequencess.com",{
     path:"/ws",
     autoConnect : false,
     reconnectionDelay : 5000,
