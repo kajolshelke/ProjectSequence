@@ -122,7 +122,7 @@ const CreateRoomPage = () => {
 
   // Copying Link To Clipboard
   function copyLinkToClipboard() {
-    navigator.clipboard.writeText(`http://sequencess.com?roomID=${roomID}`);
+    navigator.clipboard.writeText(`https://sequencess.com?roomID=${roomID}`);
     setCopyLink(true);
     setTimeout(() => setCopyLink(false), 1000);
   }
@@ -148,7 +148,7 @@ const CreateRoomPage = () => {
               Invite others using the following link :
             </p>
             <p className="text-blue-950 text-sm tracking-wide mt-2">
-              {`http://sequencess.com?roomID=${roomState.roomID}`}
+              {`https://sequencess.com?roomID=${roomState.roomID}`}
             </p>
           </div>
           <button
