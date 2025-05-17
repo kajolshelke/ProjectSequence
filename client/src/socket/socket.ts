@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 
-const socket : Socket = io("https://tqv7tt4c-80.inc1.devtunnels.ms/",{
+const socket : Socket = io("http://3.7.126.228",{
     path:"/ws",
     autoConnect : false,
     reconnectionDelay : 5000,
