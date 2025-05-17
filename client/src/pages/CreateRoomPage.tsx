@@ -122,7 +122,7 @@ const CreateRoomPage = () => {
 
   // Copying Link To Clipboard
   function copyLinkToClipboard() {
-    if (!roomState.roomID) return;
+    if (!roomID) return;
     navigator.clipboard.writeText(
       `http://sequencess.com?roomID=${roomState.roomID}`
     );

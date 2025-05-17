@@ -61,7 +61,6 @@ export default async function deadCardController(socket:Socket,playerID:string,r
         if(player[0].hand!.filter(
             x => (x.rank === selectedCardFromHand.rank && x.suit === selectedCardFromHand.suit)
         ).length === 0){
-            console.log(player[0].hand)
             throw new Error("Invalid move")
         }
 
@@ -111,7 +110,7 @@ export default async function deadCardController(socket:Socket,playerID:string,r
 
     } catch (error:any) {
         // ---- Notifying error ----- //
-        console.log(error)
+        
         socket.emit("userError",error.message)
 
     }

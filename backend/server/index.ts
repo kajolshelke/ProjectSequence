@@ -1,7 +1,6 @@
 import express from "express";
 import {createServer} from "node:http";
 import { Server } from "socket.io";
-import disconnectController from "../controllers/disconnectController.js";
 import dotenv from "dotenv";
 import createRoomController from "../controllers/createRoomController.js";
 import joinRoomController from "../controllers/joinRoomController.js";
@@ -76,9 +75,7 @@ io.on("connection",(socket)=>{
         await postGameLeaveRoomController(socket,roomID,playerID)
     })
 
-    socket.on("disconnect",()=>{
-        disconnectController(socket)
-    })
+    
 
 
 })

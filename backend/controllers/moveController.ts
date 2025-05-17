@@ -338,7 +338,7 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
 
 
 
-                console.log(data.sequenceCardsList);
+                
 
 
                 // ----  Updating the hand of player by drawing a card from deck ---- //
@@ -412,7 +412,7 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
                     }
                     
                 }
-                console.log(winState,data.teamASequenceCount,data.teamBSequenceCount);
+                
 
                 //  ----- Updating the database with these changes ----- //
 
@@ -434,7 +434,7 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
     } catch (error:any) {
 
          // ---- Notifying error ----- //
-         console.log(error)
+         
          socket.emit("userError",error.message)
 
         
