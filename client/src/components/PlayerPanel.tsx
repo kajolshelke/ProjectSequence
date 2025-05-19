@@ -3,7 +3,6 @@ import { events } from "../events/events";
 import socket from "../socket/socket";
 import HandCard from "./HandCard";
 import PlayHandCardSound from "./PlayHandCardSound";
-import PlayDeadCardSound from "./PlayDeadCardSound";
 import { useState } from "react";
 import Rules from "./Rules";
 
@@ -115,7 +114,6 @@ const PlayerPanel = ({
               roomID,
               selectedCardFromHand
             );
-            PlayDeadCardSound();
           }}
         >
           Add card to discard pile
