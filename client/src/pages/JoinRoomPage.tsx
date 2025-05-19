@@ -204,7 +204,7 @@ const JoinRoomPage = () => {
           <div className="pl-10 border-l-blue-950 border-l pb-5">
             <p className="mt-3 font-medium text-blue-950">Number Of Teams</p>
             <p className="font-medium text-blue-950 text-xs tracking-wide">
-              Number of teams should be available.
+              Number of teams available.
             </p>
             <div className="mt-3 flex items-center gap-5">
               <button
