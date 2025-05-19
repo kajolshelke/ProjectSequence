@@ -359,10 +359,15 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
 
                 
                 const playerHandAfterMove = currentPlayerHand;
-            
+                let winState = null;
+
                 // ----- Checking if the deck has cards to draw ---- //
                 if(data.drawDeck!.length < 1){
-                    throw new Error("No more cards in deck to draw")
+                    winState = "TIE";
+
+                    io.to(roomID).emit(events.playerMove.name,newBoardState,sequenceList,"-","-","-",0,data.duration,winState);
+                    await db.DEL(roomID);
+                    return
                 }
                 // --- Adding card from deck to player hand --- //
                 const newCard = data.drawDeck!.splice(0,1)[0];
@@ -392,7 +397,7 @@ export async function moveController(socket:Socket,playerID:string,roomID:string
                 data.lastTurnTime = new Date().getTime();
 
 
-                let winState = null;
+                
                 if(data.totalTeams === 2){
                     if(data.teamASequenceCount >= 2){
                         winState = "A";

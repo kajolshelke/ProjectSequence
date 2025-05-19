@@ -3,6 +3,9 @@ import { events } from "../events/events";
 import socket from "../socket/socket";
 import HandCard from "./HandCard";
 import PlayHandCardSound from "./PlayHandCardSound";
+import PlayDeadCardSound from "./PlayDeadCardSound";
+import { useState } from "react";
+import Rules from "./Rules";
 
 const PlayerPanel = ({
   selectedCardFromHand,
@@ -44,6 +47,7 @@ const PlayerPanel = ({
   const roomID = params.get("roomID");
   const navigate = useNavigate();
 
+  const [viewRules, setViewRules] = useState(false);
   return (
     <div className=" bg-gradient-to-b from-blue-950 to-blue-900 w-full rounded-md px-3 py-4 flex-1 gap-3 flex flex-col">
       <div className="flex justify-between   bg-gray-300/20 px-2 py-1 rounded-sm  text-blue-50">
@@ -104,14 +108,15 @@ const PlayerPanel = ({
           className={` text-sm w-full bg-gradient-to-br from-blue-800 to-blue-500 rounded-md font-medium
                              text-white px-1 max-[1600px]:py-1 max-[3000px]:py-2 tracking-wide cursor-pointer hover:bg-gradient-to-br
                              hover:from-blue-700 hover:to-blue-400`}
-          onClick={() =>
+          onClick={() => {
             socket.emit(
               events.deadCard.name,
               playerID,
               roomID,
               selectedCardFromHand
-            )
-          }
+            );
+            PlayDeadCardSound();
+          }}
         >
           Add card to discard pile
         </button>
@@ -125,6 +130,7 @@ const PlayerPanel = ({
           className={`w-full mb-4 outline-none border-none px-3 py-2 tracking-wide text-white font-medium rounded-md
                       bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer
                       hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400`}
+          onClick={() => setViewRules(true)}
         >
           View Rules
         </button>
@@ -141,6 +147,7 @@ const PlayerPanel = ({
           Leave Room
         </button>
       </div>
+      {viewRules && <Rules onClose={() => setViewRules(false)} />}
     </div>
   );
 };

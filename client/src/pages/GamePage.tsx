@@ -108,7 +108,7 @@ const GamePage = () => {
         setFormedSequenceList(sequenceList);
         setNextPlayerName(nextPlayerName);
         setNextPlayerTeam(nextPlayerTeam);
-        setSelectedCardFromHand(undefined);
+
         setNoOfCardsLeftInDrawDeck(drawDeckLength);
         setNextPlayerID(nextPlayerID);
         setPlayerTimeRemaining(duration);

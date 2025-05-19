@@ -10,6 +10,7 @@ import JoinRoomPage from "./pages/JoinRoomPage";
 import GlobalErrorProvider from "./contexts/ErrorContext";
 import GamePage from "./pages/GamePage";
 import ErrorToast from "./components/ErrorToast";
+import Rules from "./components/Rules";
 
 const router = createBrowserRouter([
   {
@@ -54,7 +55,6 @@ function App() {
         <ErrorToast />
       </div>
     </GlobalErrorProvider>
-    // <Rules />
   );
 }
 

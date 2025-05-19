@@ -2,6 +2,7 @@ import { IoPeople } from "react-icons/io5";
 import { IoMdCreate } from "react-icons/io";
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import Rules from "../components/Rules";
 
 const HomePage = () => {
   //State For Nickname
@@ -10,6 +11,8 @@ const HomePage = () => {
   //Get url params
   const [params] = useSearchParams();
   const roomIDFromURL = params.get("roomID");
+
+  const [viewRules, setViewRules] = useState(false);
 
   //Clear all the sessionStorage States
   useEffect(() => {
@@ -74,11 +77,15 @@ const HomePage = () => {
           </div>
         </div>
         <div className=" text-center p-4 mt-10">
-          <button className="outline-none border-none px-3 py-2 tracking-wide text-white font-medium rounded-md bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400">
+          <button
+            onClick={() => setViewRules(true)}
+            className="outline-none border-none px-3 py-2 tracking-wide text-white font-medium rounded-md bg-gradient-to-br from-orange-600 to-orange-400 cursor-pointer hover:bg-gradient-to-br hover:from-orange-500 hover:to-orange-400"
+          >
             HOW TO PLAY?
           </button>
         </div>
       </div>
+      {viewRules && <Rules onClose={() => setViewRules(false)} />}
     </div>
   );
 };

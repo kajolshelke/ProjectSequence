@@ -26,10 +26,7 @@ const server  = createServer(app);
 //Server Config
 export const io = new Server (server,{
     path:"/ws",
-    cors:{
-        origin:"*",
-        methods:["GET","POST"]
-    }
+    
 }) 
 
 
