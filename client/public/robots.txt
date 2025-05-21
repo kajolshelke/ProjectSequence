@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /create
+Disallow: /join
+Disallow: /ongoing
+Allow: /
+
+Sitemap: https://sequencess.com/sitemap.xml

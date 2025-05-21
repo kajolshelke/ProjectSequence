@@ -42,11 +42,9 @@ const HomePage = () => {
             }}
           />
           <p className="text-xs font-medium tracking-wide mt-5 text-blue-950">
-            Nickname mustn't exceed 20 character or be less than 3 characters.
+            Nickname must be 3-20 characters long and unique within the room.
           </p>
-          <p className="text-xs font-medium tracking-wide mt-1 text-blue-950">
-            Nickname must be unique within the room.
-          </p>
+
           <div className="mt-42 p-2 flex gap-10 m-auto w-full justify-center">
             {roomIDFromURL === null && (
               <Link
