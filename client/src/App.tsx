@@ -10,6 +10,8 @@ import JoinRoomPage from "./pages/JoinRoomPage";
 import GlobalErrorProvider from "./contexts/ErrorContext";
 import GamePage from "./pages/GamePage";
 import ErrorToast from "./components/ErrorToast";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TOS from "./pages/TOS";
 
 const router = createBrowserRouter([
   {
@@ -35,6 +37,14 @@ const router = createBrowserRouter([
   {
     path: "*",
     element: <NotFound />,
+  },
+  {
+    path: "/tos",
+    element: <TOS />,
+  },
+  {
+    path: "/privacy",
+    element: <PrivacyPolicy />,
   },
 ]);
 

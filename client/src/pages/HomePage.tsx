@@ -121,6 +121,22 @@ const HomePage = () => {
       </div>
       {viewRules && <Rules onClose={() => setViewRules(false)} />}
       {popup && <ScreenSizeWarning onClose={() => setPopup(false)} />}
+
+      <div className="w-full flex gap-4 items-center justify-end p-2 text-blue-950 text-xs  ">
+        <a
+          href="mailto:sequencess25@gmail.com"
+          className="underline hover:text-blue-700"
+        >
+          Feedback
+        </a>
+
+        <Link to="/tos" className="underline hover:text-blue-700">
+          Terms of Use
+        </Link>
+        <Link to="/privacy" className="underline hover:text-blue-700">
+          Privacy Policy
+        </Link>
+      </div>
     </div>
   );
 };
