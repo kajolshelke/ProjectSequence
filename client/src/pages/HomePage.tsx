@@ -121,6 +121,7 @@ const HomePage = () => {
       </div>
       {viewRules && <Rules onClose={() => setViewRules(false)} />}
       {popup && <ScreenSizeWarning onClose={() => setPopup(false)} />}
+      <div className="flex-1"></div>
 
       <div className="w-full flex gap-4 items-center justify-end p-2 text-blue-950 text-xs  ">
         <a
