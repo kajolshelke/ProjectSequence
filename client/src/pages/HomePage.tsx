@@ -3,8 +3,34 @@ import { IoMdCreate } from "react-icons/io";
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import Rules from "../components/Rules";
+import { useContext } from "react";
+import { GlobalErrorContext } from "../contexts/ErrorContext";
+
+import ScreenSizeWarning from "../components/ScreenSizeWarning";
 
 const HomePage = () => {
+  // Screen Size Prompt
+  const MIN_WIDTH = 1024;
+  const MIN_HEIGHT = 500;
+
+  const [popup, setPopup] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < MIN_WIDTH || window.innerHeight < MIN_HEIGHT) {
+        setPopup(true);
+      } else {
+        setPopup(false);
+      }
+    };
+
+    const isFirstLoad = localStorage.getItem("home-first-load");
+
+    if (!isFirstLoad) {
+      handleResize();
+      localStorage.setItem("home-first-load", "t");
+    }
+  }, []);
   //State For Nickname
   const [nickname, setNickname] = useState("");
 
@@ -13,11 +39,19 @@ const HomePage = () => {
   const roomIDFromURL = params.get("roomID");
 
   const [viewRules, setViewRules] = useState(false);
-
+  const { setError } = useContext(GlobalErrorContext);
   //Clear all the sessionStorage States
   useEffect(() => {
     sessionStorage.clear();
   }, []);
+
+  function validateNickname() {
+    if (nickname.length < 3) {
+      setError("Nickname too short");
+    } else if (nickname.length > 20) {
+      setError("Nickname too long");
+    }
+  }
 
   return (
     <div className="w-screen h-screen bg-gradient-to-b to-red-50 from-blue-300 flex flex-col items-center">
@@ -54,6 +88,7 @@ const HomePage = () => {
                     : "#"
                 }
                 className="py-1.5 outline-none font-medium rounded-md transition-all flex-1 bg-gradient-to-br from-blue-900 to-blue-500 cursor-pointer hover:bg-gradient-to-br hover:from-blue-800 hover:to-blue-400 flex items-center justify-center gap-2 text-white"
+                onClick={() => validateNickname()}
               >
                 <IoMdCreate className="text-lg " />
                 Create Room
@@ -67,6 +102,7 @@ const HomePage = () => {
                     : `#`
                 }
                 className="py-1.5 outline-none font-medium rounded-md transition-all flex-1 bg-gradient-to-br from-blue-900 to-blue-500 cursor-pointer hover:bg-gradient-to-br hover:from-blue-800 hover:to-blue-400 flex items-center justify-center gap-1 text-white"
+                onClick={() => validateNickname()}
               >
                 <IoPeople className="text-lg relative right-2 " />
                 Join Room
@@ -84,6 +120,7 @@ const HomePage = () => {
         </div>
       </div>
       {viewRules && <Rules onClose={() => setViewRules(false)} />}
+      {popup && <ScreenSizeWarning onClose={() => setPopup(false)} />}
     </div>
   );
 };
