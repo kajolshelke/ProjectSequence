@@ -50,7 +50,9 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
+    console.log("use effect trig");
     socket.on(events.roomCheck.name, (roomCheck: boolean) => {
+      console.log(roomCheck);
       if (roomCheck) {
         navigate(`/join?name=${nickname}&roomID=${roomIDFromURL}`);
       } else {
@@ -82,6 +84,7 @@ const HomePage = () => {
     }
 
     socket.emit(events.roomCheck.name, roomIDFromURL);
+    console.log(roomIDFromURL);
   };
 
   return (
