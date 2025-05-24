@@ -6,10 +6,13 @@ export default async function doesRoomExistController(socket:Socket, roomIDFromU
     try {
         const room = await db.get(roomIDFromURL);
 
+          let roomCheck;
           if(room === null){
-          socket.emit(events.roomCheck.name,false)
+            roomCheck = false;
+          socket.emit(events.roomCheck.name,roomCheck);
           }else{
-            socket.emit(events.roomCheck.name,true);
+            roomCheck = true;
+            socket.emit(events.roomCheck.name,roomCheck);
           }
 
         

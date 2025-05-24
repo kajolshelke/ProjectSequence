@@ -50,9 +50,8 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-    socket.on(events.roomCheck.name, (x: boolean) => {
-      console.log(x);
-      if (x) {
+    socket.on(events.roomCheck.name, (roomCheck: boolean) => {
+      if (roomCheck) {
         navigate(`/join?name=${nickname}&roomID=${roomIDFromURL}`);
       } else {
         setError("Room doesn't exist");
