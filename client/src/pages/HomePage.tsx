@@ -1,18 +1,21 @@
 import { IoPeople } from "react-icons/io5";
 import { IoMdCreate } from "react-icons/io";
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Rules from "../components/Rules";
 import { useContext } from "react";
 import { GlobalErrorContext } from "../contexts/ErrorContext";
 
 import ScreenSizeWarning from "../components/ScreenSizeWarning";
+import socket from "../socket/socket";
+import { events } from "../events/events";
 
 const HomePage = () => {
   // Screen Size Prompt
   const MIN_WIDTH = 1024;
   const MIN_HEIGHT = 500;
 
+  const navigate = useNavigate();
   const [popup, setPopup] = useState(false);
 
   useEffect(() => {
@@ -31,6 +34,7 @@ const HomePage = () => {
       localStorage.setItem("home-first-load", "t");
     }
   }, []);
+
   //State For Nickname
   const [nickname, setNickname] = useState("");
 
@@ -45,6 +49,21 @@ const HomePage = () => {
     sessionStorage.clear();
   }, []);
 
+  useEffect(() => {
+    socket.on(events.roomCheck.name, (x: boolean) => {
+      console.log(x);
+      if (x) {
+        navigate(`/join?name=${nickname}&roomID=${roomIDFromURL}`);
+      } else {
+        setError("Room doesn't exist");
+      }
+    });
+
+    return () => {
+      socket.off(events.roomCheck.name);
+    };
+  }, [nickname, roomIDFromURL]);
+
   function validateNickname() {
     if (nickname.length < 3) {
       setError("Nickname too short");
@@ -52,6 +71,19 @@ const HomePage = () => {
       setError("Nickname too long");
     }
   }
+
+  const handleJoinClick = () => {
+    if (nickname.length < 3) {
+      setError("Nickname too short");
+      return;
+    }
+    if (nickname.length > 20) {
+      setError("Nickname too long");
+      return;
+    }
+
+    socket.emit(events.roomCheck.name, roomIDFromURL);
+  };
 
   return (
     <div className="w-screen h-screen bg-gradient-to-b to-red-50 from-blue-300 flex flex-col items-center">
@@ -95,18 +127,13 @@ const HomePage = () => {
               </Link>
             )}
             {roomIDFromURL && (
-              <Link
-                to={
-                  nickname.length >= 3 && nickname.length <= 20
-                    ? `/join?name=${nickname}&roomID=${roomIDFromURL}`
-                    : `#`
-                }
+              <button
+                onClick={handleJoinClick}
                 className="py-1.5 outline-none font-medium rounded-md transition-all flex-1 bg-gradient-to-br from-blue-900 to-blue-500 cursor-pointer hover:bg-gradient-to-br hover:from-blue-800 hover:to-blue-400 flex items-center justify-center gap-1 text-white"
-                onClick={() => validateNickname()}
               >
                 <IoPeople className="text-lg relative right-2 " />
                 Join Room
-              </Link>
+              </button>
             )}
           </div>
         </div>

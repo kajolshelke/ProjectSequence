@@ -14,6 +14,7 @@ import leaveRoomController from "../controllers/leaveRoomController.js";
 import lobbySettingsUpdateController from "../controllers/lobbySettingsUpdateController.js";
 import deadCardController from "../controllers/deadCardController.js";
 import postGameLeaveRoomController from "../controllers/postGameLeaveRoomController.js";
+import doesRoomExistController from "../controllers/doesRoomExistController.js";
 
 //Initial Configuration 
 dotenv.config()
@@ -26,7 +27,6 @@ const server  = createServer(app);
 //Server Config
 export const io = new Server (server,{
     path:"/ws",
-    
 }) 
 
 
@@ -37,6 +37,9 @@ io.on("connection",(socket)=>{
         await createRoomController(socket,nickname)
     })
 
+    socket.on(events.roomCheck.name, async(roomIDFromURL)=>{
+        await doesRoomExistController(socket,roomIDFromURL)
+    })
     socket.on(events.joinRoom.name, async(nickname,roomID)=>{
         await joinRoomController(socket,nickname,roomID)
     })

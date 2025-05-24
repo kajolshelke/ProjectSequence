@@ -7,6 +7,7 @@ import { io } from "../server/index.js";
 import { events } from "../events/events.js";
 
 export default async function createRoomController(socket:Socket,nickname:string){
+    
 
     try {
         

@@ -8,6 +8,9 @@ export const events = {
     joinRoom:{
         name:"joinRoom",description:"Room joined by other players"
     },
+    roomCheck:{
+        name:"roomCheck",description:"To check whether a room exists in db"
+    },
     preGameUpdateRoom:{
         name:"preGameUpdateRoom",description:"Includes room lobby settings i.e. total teams, duration and switching of teams"
     },
